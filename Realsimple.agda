@@ -4,7 +4,7 @@ open import Altrat as ℚ using (ℚ; -_ ; _*_; _÷_; _≤_; *≤*; ≃⇒≡)
 open import Data.Integer as ℤ using (ℤ; +_; -[1+_]; _◃_; -_; +≤+; _⊖_) renaming (_+_ to _ℤ+_; _*_ to  _ℤ*_; ∣_∣ to ℤ∣_∣; _≤_ to ℤ_≤_)
 open import Data.Nat as ℕ using (ℕ; suc; zero; compare; _≟_; z≤n) renaming (_≤_ to ℕ_≤_)
 open import Relation.Nullary.Decidable using (True; False;toWitness; fromWitness)
-open import Data.Nat.Coprimality using (1-coprimeTo; sym)
+open import Data.Nat.Coprimality using (1-coprimeTo; sym; 0-coprimeTo-1)
 open import Relation.Binary.Core using (_≡_; refl)
 
 --Before we define the real numbers, we will need some additional functions and lemmas
@@ -61,18 +61,32 @@ zerolemma = refl
 zerlem : ℚ.numerator (+ zero ÷ 1) ≡ + zero
 zerlem = refl
 
+--The denominator of - +zero / d is d
+dlem :   ℚ.denominator-1 (ℚ.- (((+ zero ÷ 1) {fromWitness (λ {i} → (0-coprimeTo-1))}))) ≡ 0
+dlem = refl
+
+subst : (A : Set) -> (B : A -> Set) -> (x y : A) -> (x ≡ y) -> (B x -> B y)
+
+subst A B x .x refl p = p
+
+equisym : {A : Set} {x y : A} -> (x ≡ y) -> (y ≡ x)
+equisym refl = refl
+
+sinj : {n m : ℕ} -> (suc n ≡ suc m) -> n ≡ m
+sinj refl = refl
+
 --The denominator of x and -x are the same
 delemma : (x : ℚ) -> (ℚ.denominator-1 x ≡ ℚ.denominator-1 (ℚ.- x))
 delemma x with ℚ.numerator x | ℚ.denominator-1 x | toWitness (ℚ.isCoprime x)
 ... | -[1+ n ] | d | c = refl
-... | + 0       | d | _ = {!refl!}
+... | + 0       | d | c = subst _ _ 0 d (sinj (equisym (0-coprimeTo-1 c))) dlem
 ... | + ℕ.suc n | d | c = refl
 
 --The nominator of -(p/q) is -p
 nomlemma : (x : ℚ) -> (ℚ.numerator (ℚ.- x) ≡ ℤ.- ℚ.numerator (x))
 nomlemma x with ℚ.numerator x | ℚ.denominator-1 x | toWitness (ℚ.isCoprime x)
 ... | -[1+ n ] | d | c = refl
-... | + 0       | d | _ = {!zerlem!}
+... | + 0       | d | c = subst _ _ 0 d (sinj (equisym (0-coprimeTo-1 c))) zerlem
 ... | + ℕ.suc n | d | c = refl
 
 --Proof of additive inverse of rational numbers
