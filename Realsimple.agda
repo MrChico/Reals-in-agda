@@ -92,7 +92,7 @@ nomlemma x with ℚ.numerator x | ℚ.denominator-1 x | toWitness (ℚ.isCoprime
 --Proof of additive inverse of rational numbers
 addinv : (x : ℚ) -> (x - x ≡ (+ zero ÷ 1))
 addinv x with ℚ.numerator x | ℚ.denominator-1 x | toWitness (ℚ.isCoprime x)
-...| n | d | c = {!addinvl n!}
+...| n | d | c = {!refl!}
 
 -- --Need to show that the following is zero
 -- (ℤ.sign n .Data.Sign.S* .Data.Sign.Sign.+ ◃
