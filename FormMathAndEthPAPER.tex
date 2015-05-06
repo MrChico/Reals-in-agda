@@ -1,8 +1,44 @@
 \documentclass[11pt,a4paper]{article}
-\usepackage[latin1]{inputenc}
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage[colorlinks=true, breaklinks=true]{hyperref}
+\usepackage{hyperref}
+\usepackage{csquotes}
+ % The following packages are needed because unicode
+ % is translated (using the next set of packages) to
+ % latex commands. You may need more packages if you
+ % use more unicode characters:
+
+ \usepackage{amssymb}
+ \usepackage{bbm}
+ \usepackage[greek,english]{babel}
+
+ % This handles the translation of unicode to latex:
+
+ \usepackage{ucs}
+ \usepackage[utf8x]{inputenc}
+ \usepackage{autofe}
+
+% Some characters that are not automatically defined
+% (you figure out by the latex compilation errors you get),
+% and you need to define:
+
+\DeclareUnicodeCharacter{8988}{\ensuremath{\ulcorner}}
+\DeclareUnicodeCharacter{8989}{\ensuremath{\urcorner}}
+\DeclareUnicodeCharacter{8803}{\ensuremath{\overline{\equiv}}}
+
+% Add more as you need them (shouldn’t happen often).
+
+% Using “\newenvironment” to redefine verbatim to
+% be called “code” doesn’t always work properly. 
+% You can more reliably use:
+
+\usepackage{fancyvrb}
+
+\DefineVerbatimEnvironment
+  {code}{Verbatim}
+  {} % Add fancy options here if you like.
+
 
 \title{Formalized Mathematics and Ethereum}
 \author{Martin Lundfall}
@@ -17,253 +53,114 @@
 \begin{abstract}
 The decentralized infrastructure of the blockchain technology Ethereum opens a new set of possibilities for sharing content in a programmable environment. In particular, it is highly suitable for creating a standard library of formalized mathematics to which everyone can add contributions. The database can in theory be automatically checked for validity and to avoid unnecessary repetitions, scanned for relevant results, or even serve as an interactive foundation of a formalized structure of knowledge. The trustless nature of Ethereum allows communities to make democratic decisions on what contributions should be included in the database, or place bounties on particularly sought functions or proofs.
 \end{abstract}
+\clearpage
+\tableofcontents{}
+\clearpage
+\section{Introduction}\label{sec: Introduction}
+\subsection{Formal and informal mathematics}\label{subsec: formal & informal}
+The term 'Formalized mathematics' might strike readers unfamiliar with the topic as a pleonasm. What could possibly be more formal than the rigor in which mathematical proofs are presented? But as we will see, a formal approach to mathematics looks fundamentally different from traditional mathematical reasoning. The formalized approach to mathematics strives to lay out the complete path from axioms and definitions to proofs and results, without any step along the way being subject to interpretation. To illustrate what is meant by this, consider a simple informal proof showing that the sum of two odd numbers is equal:\\
+
+Any odd integer can be written as $2n+1$, for some integer $n$.\\
+Any even number can be written as $2m$, for some integer $m$.\\
+The sum of two odd numbers can be rewritten as:\\
+$(2n_1+1) + (2n_2+1) = 2n_1 + 2n_2 + 2 = 2(n_1 + n_2 + 1)$\\
+The right hand side of this eqution is on the form $2m$ and therefore even.\\
+
+The proof is blatantly trivial and its result comes as no surprise. However, since it doesn't explicitly show the complete journey from axioms to conclusions, it is essentially informal. To be satisfied with a proof like this it requires us to accept the implicit assumptions on which the reasoning is based.\\
+For example, in the step $2n_1+2n_2+2 = 2(n_1+n_2+1)$, we use the definition of addition of multiplication and the distributive property of multiplication over addition, altough this is not stated. To accept that the left hand side of the equation indeed equals the right hand side we must recognize the transitivity of the equality relation. We are assumed to know how integers are defined, and accept that $n_1+n_2+1$ is an integer without proof. It is also worth noticing that the because the offered proof does not state that all integers are either odd or equal, we can not on this proof alone rule out the possibility that the resulting sum is not both odd and even. Just the fact that our proof is written in plain english could also be a source of ambiguity.\\
+
+Of course, the implicit reasoning of this proof does not jeopoardize its vailidity. They are all both trivially proven, and generally accepted. If mathematics always were to be conducted with absolute rigor and formality, it would unlikely produce any interesting results.\\
+
+Formalized mathematics is mathematical reasoning following a set of strict rules of syntax. It requires all the steps from axioms to conclusion to be presented, and is therefore very amenable for algorithmic proof checking that a computer can do. Much of the work in formalized mathematics is therefore done in programming languages specifically designed for this purpose. \\
+
+\subsection{Formal mathematics in Agda}\label{subsec: Agda}
+In this thesis, I will be demonstrating how to formalize the constructivist definition of real numbers as described by Erret Bishop (Grundlehren Der Mathematischen Wissenschaften) in the dependently-typed programming language of Agda. Agda is a Haskell based language that essentially deals with two fundamental elements of mathematics, sets and functions. For example, here is the definition of a natural number and addition with natural numbers in Agda:\\
+
+\begin{code}
+data ℕ : Set where
+  zero : ℕ
+  suc  : (n : ℕ) → ℕ
+
+_+_ : ℕ → ℕ → ℕ
+zero  + n = n
+suc m + n = suc (m + n)
+\end{code}
+
+To fully understand Agda, I recommend checking out of of the guides on the Agda wiki. But for starters, one important thing to realize about Agda is that proofs are written as functions, utilizing a correspondence between computer programs and formal logic discovered by Haskell Curry and William Alvin Howard in the middle of the 20th century. The Curry-Howard correspondence can be stated as: a proof is a program, the formula it proves is a type for the program. For an example, let's look at how a formal version of the  proof that the sum of two odd numbers are even would look. First, we need to define odd and even numbers in Agda.
+
+\begin{code}
+data Even : ℕ → Set where
+  evenZero : Even 0
+  evenSuc : {n : ℕ} → Even n → Even (suc (suc n))
+ 
+data Odd : ℕ → Set where
+  oddOne : Odd 1
+  oddSuc : {n : ℕ} → Odd n → Odd (suc (suc n))
+\end{code}
+
+Now looking at the proof function, we see that the type of this function is the exact statement that we want to prove, and the definition of the function explicitly shows why the statement is true by using the definitions of the function + and the sets Even and Odd.
+\begin{code}
+_o+o_ : {n m : ℕ} → Odd n → Odd m → Even (n + m)
+oddOne o+o oddOne = evenSuc evenZero
+oddOne o+o oddSuc b = evenSuc (oddOne o+o b)
+oddSuc a o+o b = evenSuc (a o+o b)
+\end{code}
+
+\section{Constructing real numbers in Agda}\label{sec: reals in agda}
+
+This is an Agda implementation of the constructive definition of real numbers as given by Erret Bishop in Grundlehren Der Mathematischen Wissenschaften. Since the current agda standard library lacks many of the necessary functions on rationals to define real numbers, this work has been made possible by the contributions of the Github user Sabry at (\url{https://github.com/sabry/agda-stdlib/}).\\
+
+I have been trying to follow Bishops constructions as closely as possible, but when formalizing the definitions I have been forced to make one small change. Whereas Bishop describes a sequence as a mapping of the stricly positive integers to rationals, in Agda it is much more convenient to have a sequence starting from zero. Thus where Bishop writes:
+\blockquote{
+A sequence of rational numbers is \textit{regular} if
+\begin{center}
+$| x_m - x_n | \leq m^{-1} + n^{-1} (m, n \in \Z^+)$
+\end{center}
+A \textit{real number} is a regular sequence of rational numbers.
+}
+
+Instead, we will write:
+\begin{code}
+--Constructs a real number by a giving a sequence and a proof that the sequence is regular
+record ℝ : Set where
+  constructor Real
+  field
+    f : ℕ -> ℚ
+    reg : {n m : ℕ} -> (∣ (f n) ℚ.- (f m) ∣) ℚ.≤ ((+ 1) ÷suc n) ℚ.+ ((+ 1) ÷suc m)
+
+\end{code}
+
+I have also been trying to build this work with minimal change to the agda standard library, only making changes to the modules Rational.agda (and of course Real.agda). One significant change has been made in the definition of a rational number. In the current agda standard library, a rational number is required to be listed on its coprime form:
+\begin{code}
+
+record ℚ : Set where
+  field
+    numerator     : ℤ
+    denominator-1 : ℕ
+    isCoprime     : True (C.coprime? ∣ numerator ∣ (suc denominator-1))
+
+  denominator : ℤ
+  denominator = + suc denominator-1
+
+  coprime : Coprime numerator denominator
+  coprime = toWitness isCoprime
+\end{code}
+
+But this requirement makes proving theorems about rationals very messy, and is rarely used in informal mathematics. Instead, I have chosen to use the definition given by Bishop, which is more common: ($ℤ \times ℤ^x$). In agda, this becomes:
+\begin{code}
+record ℚ : Set where
+  constructor _÷suc_
+  field
+    numerator     : ℤ
+    denominator-1 : ℕ
+\end{code}
 
-\tableofcontents
 
-\section{Introduction}\label{Formal and informal mathematics}
-The term 'Formalized mathematics' might strike readers unfamiliar with the topic as a pleonasm. What could possibly be more formal than the rigor in which mathematical proofs are presented? But as we will see, a formal approach to mathematics looks fundamentally different from traditional mathematical reasoning. The formalized approach to mathematics strives to lay out the complete path from axioms and definitions to proofs and results, without any step along the way being subject to interpretation. To illustrate what is meant by this, consider a simple informal proof showing that the sum of two odd numbers is equal:
-
-Any odd integer can be written as $2n+1, for some integer n.$
-Any even number can be written as $2m, for some integer m.$
-$(2n_1+1) + (2n_2+1) = 2n_1 + 2n_2 + 2 = 2(n_1 + n_2 + 1)$
-The right hand side of this eqution is on the form $2m$ and therefore even.
+\section{Ethereum and theorem bounties}
 
-The proof is blatantly trivial and its result rarely disputed, but since it doesn't explicitly show the complete journey from axioms to conclusions, it is essentially informal. Whether we are satisfied with a proof like this does not only depend on its validity, but also on whether we accept the implicit assumptions on which the reasoning is based.
-For example, in the step $2n_1+2n_2+2 = 2(n_1+n_2+1)$, we use the definition of addition of multiplication and the distributive property of multiplication over addition, altough this is not stated. To accept that the left hand side of the equation indeed equals the right hand side we must recognize the transitivity of the equality relation. We are assumed to know how integers are defined, and accept that $n_1+n_2+1$ is an integer without proof. It is also worth noticing that the because the offered proof does not state that all integers are either odd or equal, we can not on this proof alone rule out the possibility that the resulting sum is not both odd and even. Just the fact that our proof is written in plain english could also be a source of ambiguity.
-
-Of course, the fact that these assumptions are omitted in the proof does not jeopoardize its vailidity. The implicit assumptions of our example proof are trivially proven. If mathematics always were to be conducted with absolute rigor and formality, it would unlikely produce any interesting results. It is widely accepted that a given mathematical proof will assume some prior knowledge and reasoning ability of the reader.
-
-Formalized mathematics is mathematical reasoning following a set of strict rules of syntax. It requires all the steps from axioms to conclusion to be presented, and is therefore very amenable for algorithmic proof checking capable of being done by a computer. How these rules of syntax are to be defined , and in the  are many interesting philosophical questions which arises from such an endeavor.
-Att använda \LaTeX\ på Linux-datorerna i datorsalen är inte svårt. Denna mall är tänkt att användas av dig så att du kan börja skriva labbrapporter och exjobbsrapporter i \LaTeX. En längre och mycket användbar manual finns att hämta här:\\
-\url{http://www.ctan.org/tex-archive/info/lshort/english/lshort.pdf} 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \texttt, \textit (kursiverat) och \textbf (fetstil) 
-% är några kommandon för att ändra textens utseende
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}   
 
+But the line between the two of these elements is blurred by the fact that agda is dependently typed, meaning that a set can take arguments of other sets or functions as input
 
-När man använder \LaTeX för att skriva rapporter o.dyl. så skriver man, liksom i \texttt{html}, text och kod i en separat fil som sedan omvandlas av ett program till en mer läsbar fil. För \texttt{html} gör en webbläsare som Firefox, Safari eller Internet explorer jobbet och visar upp resultatet. \LaTeX\ omvandlar den kod du har skrivit till en så kallad \texttt{.dvi}-fil, eller en vanlig \texttt{pdf}.
-
-Det är tänkt att du skall kunna göra din egen rapport helt enkelt genom att ändra i den kod som ligger till grund för detta dokument du nu läser. Hämta filen \texttt{exjobbsmall.tex} (och bilderna \texttt{plus\_och\_kryss.eps} och  \texttt{plus\_och\_kryss.eps}) från \url{http://www.math.su.se/pub/jsp/polopoly.jsp?d=7941}, och spara den på lämpligt ställe.
-
-
-
-\section{Emacs}\label{om_text}
-
-Du kan använda vilken textredigerare som helst, men denna introduktion beskriver hur du kan använda Emacs (och att du använder Linux). Öppna en konsol, och ta dig med \texttt{cd} till den katalog där du sparade \texttt{exjobbsmall.tex}. Öppna filen genom att skriva
-\begin{verbatim}
-emacs exjobbsmall.tex &
-\end{verbatim}
-(och tryck enter). Om inte texten är färglagd, så välj i menyraden Options $\to$ Syntax Highlighting.\\
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Man kan tvinga fram en ny rad med \\
-% Om LaTeX inte avstavar ett ord (bra) så kan man föreslå
-%  ställen så här latex\-manu\-al\-en i den löpande texten
-% Det behövs sällan, men om du vill tvinga fram ett 
-%  sidbyte kan du göra det med \newpage
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Spara din egen kopia av mallen genom att i menyn välja File $\to$ Save Buffer As\dots, titta på listen längst ner i fönstret; där skriver du in ett lämpligt namn som måste sluta på .tex, kanske \texttt{en-fil.tex} (och trycker enter). Ändra t.ex. h�Ã�r, spara genom File $\to$ Save (current buffer), och \textit{kompilera} din kod med \LaTeX\ genom att välja TeX $\to$ TeX file.\footnote{Bredvid menyalternativen står kortkommandon, du kan t.ex. spara genom att trycka Ctrl-x och sedan Ctrl-s. När det står M betyder det Alt-tangenten, t.ex. kopiera markerad text: Alt-w. Ett annat bra kommando är Ctrl-c som avbryter ett pågående kommando.}
-
-
-
-\section{Titta på resultatet}\label{dvi_och_pdf}
-
-Du kan kolla på din \texttt{dvi}-fil genom att skriva
-\begin{verbatim}
-xdvi en-fil.dvi &
-\end{verbatim}
-(om du nu kallade din fil för \texttt{en-fil}). Om du vill göra om \texttt{dvi}n till en \texttt{pdf}-fil så kan du i konsolen skriva
-\begin{verbatim}
-dvipdf en-fil
-\end{verbatim}
-Denna \texttt{pdf} kan du öppna med t.ex. \texttt{xpdf} med kommandot
-\begin{verbatim}
-xpdf en-fil.pdf
-\end{verbatim}
-\texttt{xdvi} laddar om filen så fort du klickar på fönstret, men i \texttt{xpdf} kan du behöva ladda om filen efter att du ha kompilerat den. Detta gör du genom att trycka \texttt{r}.
-
-\subsection{Pdf direkt}
-Ett alternativ som rekommenderas är att hoppa över \texttt{dvi}-steget och göra en \texttt{pdf}-fil direkt, genom att kompilera genom att skriva
-\begin{verbatim}
-pdflatex en-fil.tex
-\end{verbatim}
-i konsolen istället för att göra det via Emacs.\footnote{pdf\LaTeX är förvalet under MacOSX och kanske även under Windows. Det har även den fördelen att hyperlänkar fungerar bättre.}
-
-
-
-\section{Listor och tabeller}
-
-
-Det kan vara praktiskt att punkta upp olika saker
-\begin{itemize}
-\item För att det blir mer lättläst.
-\item För att det är roligt
-\end{itemize}
-Man kan också vilja göra numrerade listor
-\begin{enumerate}
-\item För att saker har en naturlig ordning.
-\item För att det är roligt
-\item Särkilt när man kombinerar
-\begin{itemize}
-\item vanliga listor och
-\item numrerade.
-\end{itemize}
-\end{enumerate}
-Tabeller finns det i många olika varianter, här är några exempel (titta i koden för kommentarer!):
-
-% ''tabular'' ligger exakt där man lägger den
-\begin{tabular}{c|r|r}
-% kolumnerna är från vänster till höger, _c_entrerad, _h_ögerjusterad och  _h_ögerjusterad,
-% och här avgränsade med vertikala linjer indikerat av |
-& krona & klave \\
-\hline % en horisontell linje
-vinst & 12 & 34 \\
-förlust & 56 & 0 
-\end{tabular}
-
-\bigskip % lite blankrader
-
-\begin{tabular}{l @{} r @{.} l | r @{.} l}
-% illustrerar hur man kan centrera på decimalpunkter med @{.}, och osynliga avgränsare: @{}
-\hline
-en lång text & 15 & 34 & -5 & 09 \\
-\TeX & 153 & 4 & -50 & 9 \\
-\hline
-\end{tabular}
-
-
-\subsection{Men jag har ju gjort en fin tabell i Excel\dots}
-
-\dots och vill inte behöva skriva om den med en massa \texttt{\&}-tecken?
-
-Lösningen är att spara ditt kalkylblad som en kommaseparerad fil med filändelse \texttt{.csv}. Öppna den i Emacs.\footnote{Man kan öppna en ny fil i samma fönster men i en annan s.k. ''buffer'' genom att välja File $\to$ Open File\dots och skriva in filens namn längst ner i fönstret. Du kan byta tillbaka till din tidigare öppna fil under menyn Buffers.}
-Välj Edit $\to$ Search $\to$ Replace\dots, skriv in \texttt{,} tryck enter, skriv in \texttt{\ \&\ } (med mellanrum omkring) och tryck enter. Emacs kommer nu för varje komma fråga om du vill byta ut det mot \texttt{\ \&\ }. Tryck \texttt{y} om det passar sig, annars \texttt{n}.
-
-Ett annat sätt är att från konsolen skriva:
-\begin{verbatim}
-sed 's/,/ \& /g' tabell.csv > tabell.tex
-\end{verbatim}
-Öppna \texttt{tabell.tex} i Emacs och klistra in i ditt dokument.
-
-
-
-\section{Matematiska formler och uttryck}
-
-Den stora vinsten med att använda \LaTeX\ är att det blir lätt att skriva matematiska uttryck. Uttryck som skall stå inne i en text börjar med \$, så här $P(X=k)=\binom{13}{k} (\frac{1}{3})^k (\frac{2}{3})^{13-k}$. Men kan också låta uttrycket få större utrymmme genom att använda \$\$:
-$$
-P(X=k)=\binom{13}{k} \left( \frac{1}{3} \right)^k \left( \frac{2}{3}\right)^{13-k}. % Här använder jag \left och \right för att matchande parenteser skall få rätt storlek.
-$$
-eller \texttt{equation*}:
-\begin{equation*}
-P(X_3 \leq 4) = P(X_3 \geq 5) = \sum_{k=5}^{13}\binom{13}{k} \left( \frac{1}{3} \right)^k \left( \frac{2}{3}\right)^{13-k}
-\end{equation*}
-För flera ekvationer används lämpligen \texttt{align*}, där \texttt{\&} markerar vad ekvationerna ska ordnas efter:
-\begin{align*}
-P(Y \leq y) &= P\left(\frac{Y-\mu}{\sigma} \leq \frac{y-\mu}{\sigma} \right) \\
-&= P\left(Z \leq \frac{y-\mu}{\sigma} \right) \\
-&= \int_{-\infty}^{ (y-\mu)/\sigma } \frac{1}{ \sqrt{2\pi} } e^{ -\frac{z^2}{2} } dz \\
-&= \int_{-\infty}^{ (y-\mu)/\sigma }\phi(z)dz \\
-\{ \text{per def.} \}&= \Phi\left(\frac{y-\mu}{\sigma}\right)
-\end{align*}
-Vi använder \texttt{equation} och \texttt{align} med \texttt{*} eftersom vi inte vill ha någon \textbf{ekvationsnumrering}. Man bör bara numrera ekvationer om man refererar till dem, och då behöver de också en \texttt{label}:
-\begin{equation}\label{den_haer_aer_viktig}
-\text{Bin}(n,p) \approx \text{Po}(np)\quad\text{då $p$ är litet}
-\end{equation}
-% \quad ger lite tomt utrymme i formler. Du kan också prova \! \, \: \; \qquad
-Ett annat exempel:
-\begin{equation}\label{ganska_basic}
-1+1=2
-\end{equation}
-På kursen Sanno I lär man sig att uttryck \eqref{den_haer_aer_viktig} är sant, att ekvationen \eqref{ganska_basic} är sann vet du sedan tidigare. Poängen med att använda \texttt{label}s och \texttt{eqref} är att du slipper hålla reda på de faktiska numrena. Prova att klippa ut koden till den andra ekvationen och lägga den före den första så att det ser ut så här: (kolla hur jag använder \texttt{verbatim} för längre kod-exempel!)
-
-\begin{verbatim}
-\begin{equation}\label{ganska_basic}
-1+1=2
-\end{equation}
-\begin{equation}\label{den_haer_aer_viktig}
-\text{Bin}(n,p) \approx \text{Po}(np)\quad\text{då $p$ är litet}
-\end{equation}
-\end{verbatim}
-Kompilera (kan behöva göras två gånger!), och kolla att resultatet stämmer.
-
-
-Matriser behöver man ibland:
-$$
-\begin{pmatrix}
-a & b & c \\
-d & e & f
-\end{pmatrix}
-\neq 
-\begin{pmatrix}
-12 & 3 & \rho \\
-\Pi & \frac{1}{2} & \int f(x)dx \\
-\end{pmatrix}
-$$
-
-
-\subsection{Felsökning}
-
-Om \LaTeX\ spottar ur sig en massa varningar och felmeddelanden i nedre halvan av Emacs-fönstret beror det oftast på att
-\begin{enumerate}
-\item du har skrivit en \{ eller en \} för mycket eller för litet, eller så
-\item har du skrivit ett eller två \$ för mycket eller för litet. 
-\end{enumerate}
- Om du läser felmeddelandena så brukar det stå vilken rad felet började på (eller åtminstone var \LaTeX\ först upptäckte att något var fuffens). Använd \texttt{\%} på olika ställen på den raden eller i närheten för att kommentera bort kod som det kanske är något fel med, så att du kan se var felet finns eller inte finns.
-
-
-\section{Infoga bilder och plottar}\label{infoga_bilder}
-
-Bilder är lätt att få med. Om man använder först gör \texttt{dvi}-filer så måste bilderna vara sparade som \texttt{eps}. Om man gör \texttt{pdf}-filer direkt så måste bilderna vara sparade som just \texttt{pdf}. Du kan enkelt konvertera dina \texttt{eps}-filer till \texttt{pdf}-filer med kommandot \texttt{epstopdf}:
-\begin{verbatim}
-epstopdf plus_och_kryss.eps
-\end{verbatim}
-
-Det kan vara lite svårt att få bilder att ligga exakt var man vill, eftersom \LaTeX\ har en egen uppfattning om vad som ser bäst ut. Kolla var figur \ref{en_figur} hamnade, och hur jag refererade till den med \texttt{ref}
-
-\begin{figure}[t] % Denna försöker jag lägga på _t_oppen av en sida
-\centering
-\includegraphics[width=9cm]{plus_och_kryss} % width kan du anpassa för att få en större eller mindre bild
-\caption{Detta är två fördelningar}\label{en_figur}
-\end{figure}
-
-
-\section{Att referera, citera, och mer att läsa}
-
-Man kan referera till vad som helst du har gett en \texttt{label} med kommandot \texttt{ref}. \texttt{eqref} lägger dessutom till parenteser kring (ekvations-)numret. Man kan t.ex. hänvisa till stycke \ref{om_text} som handlar om Emacs. Om din \texttt{pdf}- eller \texttt{dvi}-läsare klarar av hyperlänkar så är dessutom dina referser klickbara eftersom vi använder packaget \texttt{hyperref}.\footnote{Prova att ta bort \texttt{colorlinks=true} på rad 6 innan du skall skriva ut.}
-
-Om du vill citera en källa gör du det enklast med \texttt{cite} så här:  Jag har lärt mig mycket om \LaTeX\ från \cite{lshort}. Om man vill veta mer om detaljer för att typsätta matematik bör man även titta på \cite{amsmath}.
-
-
-
-\section{\LaTeX\ hemma}
-
-Gå till \url{http://www.ctan.org/starter.html} och läs på, eller fråga din lärare!\footnote{Mer specifikt så kan du kolla in \url{http://tug.org/mactex/} för Mac, \url{http://www.tug.org/protext/} för Windows och \url{http://tug.org/texlive/} för Linux.}
-
-\begin{thebibliography}{99} % 99 för att vi garderar oss med att vi inte kommer at ha fler än 99 ref.
-
-\bibitem{lshort}
-\textsc{Oetiker et al.} The Not So Short Introduction to \LaTeX2e,
-\url{http://www.ctan.org/tex-archive/info/lshort/english/lshort.pdf}
-
-\bibitem{amsmath}
-\textsc{AMS} User's Guide for the \texttt{amsmath} Package,
-\url{ftp://ftp.ams.org/pub/tex/doc/amsmath/amsldoc.pdf}
-
-\end{thebibliography}
-
-
-\end{document}   % Här slutar dokumentet
-
-
-Det som står här kommer inte med. Jag brukar använda utrymmet för att spara på textsnuttar som jag inte är säker på att ta med.
-
-\begin{figure}
-\centering
-\includegraphics[width=10cm]{blaha.eps}
-\caption{}
-\end{figure}
-
-\overset{d}{=}
-
+How these rules of syntax are to be defined , and in the  are many interesting philo sophical questions which arises from such an endeavor.
