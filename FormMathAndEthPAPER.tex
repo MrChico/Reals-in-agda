@@ -4,6 +4,7 @@
 \usepackage[colorlinks=true, breaklinks=true]{hyperref}
 \usepackage{hyperref}
 \usepackage{csquotes}
+\usepackage{harvard}
  % The following packages are needed because unicode
  % is translated (using the next set of packages) to
  % latex commands. You may need more packages if you
@@ -11,14 +12,15 @@
 
  \usepackage{amssymb}
  \usepackage{bbm}
- \usepackage[greek,english]{babel}
+ \usepackage[english]{babel}
 
  % This handles the translation of unicode to latex:
 
  \usepackage{ucs}
  \usepackage[utf8x]{inputenc}
  \usepackage{autofe}
-
+ \usepackage{verbatim}
+ \usepackage{amssymb}
 % Some characters that are not automatically defined
 % (you figure out by the latex compilation errors you get),
 % and you need to define:
@@ -40,41 +42,55 @@
   {} % Add fancy options here if you like.
 
 
-\title{Formalized Mathematics and Ethereum}
+\title{Formalizing Real Numbers in Agda}
 \author{Martin Lundfall}
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \maketitle
-
+\begin{abstract}
+The constructivist notion of real numbers was formalized by Errett Bishop in his 1967 book \textit{Foundations of Constructive Analysis}, in which he showed that most major theorems of real analysis could be proven with constructive methods. This work is a first step towards formalizing this notion in the dependently typed functional programming language and proof assistant Agda. Using the Agda Standard Libray and additional work by the GitHub user sabry, a major step towards formalizing the definition of real numbers and the equivalence relation is taken.
+\end{abstract}
+\begin{comment}
 \begin{abstract}
 The decentralized infrastructure of the blockchain technology Ethereum opens a new set of possibilities for sharing content in a programmable environment. In particular, it is highly suitable for creating a standard library of formalized mathematics to which everyone can add contributions. The database can in theory be automatically checked for validity and to avoid unnecessary repetitions, scanned for relevant results, or even serve as an interactive foundation of a formalized structure of knowledge. The trustless nature of Ethereum allows communities to make democratic decisions on what contributions should be included in the database, or place bounties on particularly sought functions or proofs.
 \end{abstract}
+\end{comment}
 \clearpage
 \tableofcontents{}
 \clearpage
 \section{Introduction}\label{sec: Introduction}
 \subsection{Formal and informal mathematics}\label{subsec: formal & informal}
-The term 'Formalized mathematics' might strike readers unfamiliar with the topic as a pleonasm. What could possibly be more formal than the rigor in which mathematical proofs are presented? But as we will see, a formal approach to mathematics looks fundamentally different from traditional mathematical reasoning. The formalized approach to mathematics strives to lay out the complete path from axioms and definitions to proofs and results, without any step along the way being subject to interpretation. To illustrate what is meant by this, consider a simple informal proof showing that the sum of two odd numbers is equal:\\
+The term ``Formalized mathematics'' might strike readers unfamiliar with the topic as a pleonasm. What could possibly be more formal than the rigor in which mathematical proofs are presented? But as we will see, a formal approach to mathematics looks fundamentally different from traditional mathematical reasoning. The formalized approach to mathematics strives to lay out the complete path from axioms and definitions to proofs and results, without any step along the way being subject to interpretation. To illustrate what is meant by this, consider a simple informal proof showing that the sum of two odd numbers is equal:\\
 
-Any odd integer can be written as $2n+1$, for some integer $n$.\\
-Any even number can be written as $2m$, for some integer $m$.\\
-The sum of two odd numbers can be rewritten as:\\
+\newtheorem{odd and even}{Definition}
+\begin{odd and even}
+A natural number is \textbf{even} if it is either 0 or two larger than another even number.\\
+A natural number is \textbf{odd} if it is either 1 or two larger than another odd number.
+\end{odd and even}
+\newtheorem{informal}{Theorem}
+\begin{informal}
+The sum of two odd numbers is even.\\
+The proof is done by checking the cases
+
 $(2n_1+1) + (2n_2+1) = 2n_1 + 2n_2 + 2 = 2(n_1 + n_2 + 1)$\\
-The right hand side of this eqution is on the form $2m$ and therefore even.\\
+The right hand side of this eqution is on the form $2m$ and therefore even. $\square$\\
+\end{informal}
 
-The proof is blatantly trivial and its result comes as no surprise. However, since it doesn't explicitly show the complete journey from axioms to conclusions, it is essentially informal. To be satisfied with a proof like this it requires us to accept the implicit assumptions on which the reasoning is based.\\
-For example, in the step $2n_1+2n_2+2 = 2(n_1+n_2+1)$, we use the definition of addition of multiplication and the distributive property of multiplication over addition, altough this is not stated. To accept that the left hand side of the equation indeed equals the right hand side we must recognize the transitivity of the equality relation. We are assumed to know how integers are defined, and accept that $n_1+n_2+1$ is an integer without proof. It is also worth noticing that the because the offered proof does not state that all integers are either odd or equal, we can not on this proof alone rule out the possibility that the resulting sum is not both odd and even. Just the fact that our proof is written in plain english could also be a source of ambiguity.\\
+The proof is trivial and the result comes as no surprise. However, since it does not explicitly state how the conclusion is derived from the axioms, it is essentially informal. To be satisfied with a proof like this it we are required to accept the implicit assumptions on which the reasoning is based.\\
+For example, in the step $2n_1+2n_2+2 = 2(n_1+n_2+1)$, we use the definition of addition of multiplication and the distributive property of multiplication over addition, altough this is not stated. To accept that the left hand side of the equation indeed equals the right hand side we must recognize the transitivity of the equality relation. We are assumed to know how integers are defined, and accept that $n_1+n_2+1$ is an integer without proof. It is also worth noticing that the because the offered proof does not state that all integers are either odd or equal, we can not on this proof alone rule out the possibility that the resulting sum is not both odd and even. Even the fact that our proof is written in plain english could also be a source of ambiguity.\\
 
-Of course, the implicit reasoning of this proof does not jeopoardize its vailidity. They are all both trivially proven, and generally accepted. If mathematics always were to be conducted with absolute rigor and formality, it would unlikely produce any interesting results.\\
+Of course, the implicit reasoning of this proof does not jeopoardize its vailidity. They are all both trivially proven, and generally accepted. If mathematics were always to be conducted with absolute rigor and formality, it would unlikely produce any interesting results.\\
 
-Formalized mathematics is mathematical reasoning following a set of strict rules of syntax. It requires all the steps from axioms to conclusion to be presented, and is therefore very amenable for algorithmic proof checking that a computer can do. Much of the work in formalized mathematics is therefore done in programming languages specifically designed for this purpose. \\
+Formalized mathematics is mathematical reasoning following a set of strict rules of syntax. It requires all the steps from axioms to conclusion to be presented, and is therefore very amenable for algorithmic proof checking which can be done by a computer. Much of the work in formalized mathematics is therefore done in programming languages specifically designed for this purpose.\\
+
+\subsection{Constructivist mathematics}
+When formalizing mathematics, one has to make a decision on what logical framework to use. This is a much disputed topic with many different answers to the question of what the ``proper'' foundation of mathematical reasoning should be. Two major and opposing approaches are classical and constructive mathematics. The main difference in these schools of thought is how to interpret the law of the excluded middle, which states that every proposition either has to be true or false. While this is accepted as an axiom for classical mathematics, constructivist claim that this is not necessarily the case for all propositions. The common example is Goldbach conjecture...
 
 \subsection{Formal mathematics in Agda}\label{subsec: Agda}
-In this thesis, I will be demonstrating how to formalize the constructivist definition of real numbers as described by Erret Bishop (Grundlehren Der Mathematischen Wissenschaften) in the dependently-typed programming language of Agda. Agda is a Haskell based language that essentially deals with two fundamental elements of mathematics, sets and functions. For example, here is the definition of a natural number and addition with natural numbers in Agda:\\
+In this thesis, I will be demonstrating how to formalize the constructivist definition of real numbers as described by Errett Bishop in Grundlehren Der Mathematischen Wissenschaften \cite{bishop:67} in the dependently-typed programming language of Agda. Agda is a Haskell based language that essentially deals with two fundamental elements of mathematics, sets and functions. For example, here is the definition of a natural number and addition with natural numbers, $\mathbb{N}$ in Agda:\\
 
 \begin{code}
 data ℕ : Set where
@@ -86,8 +102,9 @@ zero  + n = n
 suc m + n = suc (m + n)
 \end{code}
 
-To fully understand Agda, I recommend checking out of of the guides on the Agda wiki. But for starters, one important thing to realize about Agda is that proofs are written as functions, utilizing a correspondence between computer programs and formal logic discovered by Haskell Curry and William Alvin Howard in the middle of the 20th century. The Curry-Howard correspondence can be stated as: a proof is a program, the formula it proves is a type for the program. For an example, let's look at how a formal version of the  proof that the sum of two odd numbers are even would look. First, we need to define odd and even numbers in Agda.
-
+We see that the natural numbers is essentially a set which is created by two constructors, \texttt{zero and suc}. \texttt{suc} is short for the successor function, which given any natural number \texttt{n}, constructs the number \texttt{suc n}. \\
+The number 3 for example, is written as \texttt{suc (suc (suc (zero)))} in this way. When defining other functions on natural numbers, what we need to do is first state the type of the function (addition takes two natural numbers and outputs a natural number as an answer) and then simply match the definition of $\mathbb{N}$ and explicitly state how the output is constructed.\\
+Now we are ready to define the sets of odd and even numbers in a constructivistic fashion.
 \begin{code}
 data Even : ℕ → Set where
   evenZero : Even 0
@@ -97,29 +114,33 @@ data Odd : ℕ → Set where
   oddOne : Odd 1
   oddSuc : {n : ℕ} → Odd n → Odd (suc (suc n))
 \end{code}
-
-Now looking at the proof function, we see that the type of this function is the exact statement that we want to prove, and the definition of the function explicitly shows why the statement is true by using the definitions of the function + and the sets Even and Odd.
+To construct the previously given example 
+We can now give the previously stated proof that the sum of two odd numbers is even in the formal language of Agda. Proof is a function which has the statement we want to prove is the exact statement that we want to prove, and the definition of the function explicitly shows why the statement is true by using the definitions of the function + and the sets Even and Odd.
 \begin{code}
-_o+o_ : {n m : ℕ} → Odd n → Odd m → Even (n + m)
-oddOne o+o oddOne = evenSuc evenZero
-oddOne o+o oddSuc b = evenSuc (oddOne o+o b)
-oddSuc a o+o b = evenSuc (a o+o b)
+o+o : {n m : ℕ} → Odd n → Odd m → Even (n + m)
+o+o oddOne oddOne = evenSuc evenZero
+o+o (oddSuc n) oddOne = evenSuc (o+o n oddOne)
+o+o oddOne (oddSuc m) = evenSuc (o+o oddOne m)
+o+o (oddSuc n) (oddSuc m) = evenSuc (o+o n (oddSuc m))
 \end{code}
+
+The idea of the proof is similair to the one given in
+
+
+To fully understand Agda, I recommend checking out of of the guides on the Agda wiki. But for starters, one important thing to realize about Agda is that proofs are written as functions, utilizing a correspondence between computer programs and formal logic discovered by Haskell Curry and William Alvin Howard in the middle of the 20th century. The Curry-Howard correspondence can be stated as: a proof is a program, the formula it proves is a type for the program. For an example, let's look at how a formal version of the  proof that the sum of two odd numbers are even would look. First, we need to define odd and even numbers in Agda.
 
 \section{Constructing real numbers in Agda}\label{sec: reals in agda}
 
 This is an Agda implementation of the constructive definition of real numbers as given by Erret Bishop in Grundlehren Der Mathematischen Wissenschaften. Since the current agda standard library lacks many of the necessary functions on rationals to define real numbers, this work has been made possible by the contributions of the Github user Sabry at (\url{https://github.com/sabry/agda-stdlib/}).\\
 
-I have been trying to follow Bishops constructions as closely as possible, but when formalizing the definitions I have been forced to make one small change. Whereas Bishop describes a sequence as a mapping of the stricly positive integers to rationals, in Agda it is much more convenient to have a sequence starting from zero. Thus where Bishop writes:
-\blockquote{
-A sequence of rational numbers is \textit{regular} if
-\begin{center}
-$| x_m - x_n | \leq m^{-1} + n^{-1} (m, n \in \Z^+)$
-\end{center}
+I have following Bishops definitions as closely as possible, with only a couple of small changes. Where Bishop describes a sequence as a mapping of the stricly positive integers to rationals, in Agda it is much more convenient to have a sequence starting from zero. Thus where Bishop writes:
+\begin{blockquote}
+A sequence of rational numbers is \textit{regular} if 
+$$| x_m - x_n | \leq m^{-1} + n^{-1} (m, n \in \mathbb{Z}^*)$$
 A \textit{real number} is a regular sequence of rational numbers.
-}
+\end{blockquote}
 
-Instead, we will write:
+Instead, we will create the sequence as a mapping from the natural numbers. We write as follows:
 \begin{code}
 --Constructs a real number by a giving a sequence and a proof that the sequence is regular
 record ℝ : Set where
@@ -158,7 +179,8 @@ record ℚ : Set where
 
 \section{Ethereum and theorem bounties}
 
-
+\bibliography{citations}
+\bibliographystyle{kluwer}
 \end{document}   
 
 But the line between the two of these elements is blurred by the fact that agda is dependently typed, meaning that a set can take arguments of other sets or functions as input
