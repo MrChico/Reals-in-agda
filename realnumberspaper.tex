@@ -1,4 +1,5 @@
 \documentclass[11pt,a4paper]{article}
+\usepackage{listings}
 \usepackage{amsmath}
 \usepackage{amstext}
 \usepackage{graphicx}
@@ -55,7 +56,7 @@
 
 \maketitle
 \begin{abstract}
-The constructive notion of real numbers was formalized by Errett Bishop in his 1967 book \textit{Foundations of Constructive Analysis}, in which he showed that most major theorems of real analysis could be proven with constructive methods. This work is a first step towards formalizing this notion in the dependently typed functional programming language and proof assistant Agda. Using the Agda Standard Library and additional work by the GitHub user sabry, a major step towards formalizing the definition of real numbers and the equivalence relation is taken. In the process we present an alternate definition of rational numbers in Agda and prove some important statements about functions on rationals.
+The constructive notion of real numbers was formalized by Errett Bishop in his 1967 book \textit{Foundations of Constructive Analysis} \cite{bishop:85}, in which he showed that most major theorems of real analysis could be proven with constructive methods. This work is a first step towards formalizing this notion in the dependently typed functional programming language and proof assistant Agda. Using the Agda Standard Library and additional work by the GitHub user sabry \cite{sabry}, a major step towards formalizing the definition of real numbers and the equivalence relation is taken. In the process we present an alternate definition of rational numbers in Agda and prove some important statements about functions on rationals.
 \end{abstract}
 \begin{comment}
 n\begin{abstract}
@@ -91,11 +92,17 @@ Of course, the fact that this proof contains some implicit reasoning does not je
 Formalized mathematics is mathematical reasoning following a set of strict rules of syntax. It requires all the steps from axioms to conclusion to be presented, and is therefore very amenable for algorithmic proof checking which can be done by a computer. Much of the work in formalized mathematics is therefore done in programming languages specifically designed for this purpose.\\
 
 \subsection{Classical and constructive mathematics}
-When formalizing mathematics, one has to make a decision on what logical framework to use. This is a disputed topic within mathematics, with many different answers to the question of what the ``proper'' foundation of mathematical reasoning should be. Two major and opposing approaches are classical and constructive mathematics. One of the biggest disagreements behind these viewpoints lies in in the logical axiom known as the law of the excluded middle. It states that every proposition either has to be true or false. While this is accepted in classical mathematics, constructivists claim that this is not necessarily the case for all propositions. An example is the famous unproved mathematical statement known as Goldbach's conjecture, which states that every number can be written as the sum of odd primes. According to constructivists, since we have not explicitly constructed a proof or disproof of Goldbach's conjecture, we are not justified in asserting ``Goldbach's Conjecture is either true or false'', a statement that is regarded as true in classical mathematics. \\
-Constructivists and classical mathematicians disagree on the interpretation of ``there exists'' in a mathematical sense. This becomes very apparent in the definition of real numbers. 
+When formalizing mathematics, one has to make a decision on what logical framework to use. This is a disputed topic within mathematics, with many different answers to the question of what the ``proper'' foundation of mathematical reasoning should be. Two major and opposing approaches are classical and constructive mathematics. One of the biggest disagreements between these two sides lies in in the logical axiom known as the law of the excluded middle. It states that every proposition either has to be true or false. While this is accepted in classical mathematics, constructivists claim that this is not necessarily the case for all propositions.\\
+A common example is the famous unproved mathematical statement known as Goldbach's conjecture, which states that every number can be written as the sum of odd primes. According to constructivists, since we have not explicitly constructed a proof or disproof of Goldbach's conjecture, we are not justified in asserting ``Goldbach's Conjecture is either true or false'', a statement that is regarded as true in classical mathematics. \\
+Constructivists and classical mathematicians disagree on the interpretation of ``there exists'' in a mathematical sense. This becomes very apparent when working with real numbers, since they are usually, informally, constructed as a converging cauchy sequence of rational numbers. In the classical approach to mathematics, convergence of a sequence is defined as:
+\newtheorem{conv}{Definition}
+\begin{conv}Convergence of a sequence\\
+A sequence $x$ of rational numbers $x_1, x_2, x_3, \dots$ is \textbf{convergent} if for every rational $\epsilon > 0$, there exists an integer $N$ such that for all natural numbers $m, n > N$ we have $| x_m - x_n | < \epsilon$.
+\end{conv}
+Constructivists are not satisfied with this definition, because it does not entail instructions of \textit{how} the integer N is to be chosen. Claiming that something exists must for a constructivist also be followed by an explicit construction of the object.
 
 \subsection{Formal mathematics in Agda}\label{subsec: Agda}
-In this thesis, I will be demonstrating how to formalize the constructive definition of real numbers as described by Errett Bishop in Grundlehren Der Mathematischen Wissenschaften \cite{bishop:67} in the dependently-typed programming language of Agda. Agda is a Haskell based language that essentially deals with two fundamental elements of mathematics, sets and functions. For example, here is the definition of a natural number and addition with natural numbers, $\mathbb{N}$ in Agda:\\
+In this work, I formalize the constructive notion of real numbers as described by Errett Bishop in Grundlehren Der Mathematischen Wissenschaften \cite{bishop:85} in the dependently-typed programming language of Agda. Agda is a functional programming language with a syntax similar to Haskell that essentially deals with two fundamental elements of mathematics, sets and functions. For example, here is the definition of a natural number and addition with natural numbers, $\mathbb{N}$ in Agda:\\
 
 \begin{code}
 data ℕ : Set where
@@ -144,26 +151,33 @@ When comparing the following proof with the previous, informal one, we might gai
 o+o : {m n : ℕ} → odd n → odd m → even (n + m)
 o+o {m} {n} (j , p) (k , q) = suc (j + k) , 
   (begin 
-    suc (j + k + suc (j + k)) ≡⟨ cong suc (ℕ+-comm (j + k) (suc (j + k)))  ⟩ 
-    suc (suc (j + k + (j + k))) ≡⟨ cong (λ a -> suc (suc a)) (ℕ+-assoc j k (j + k))  ⟩ 
-    suc (suc (j + (k + (j + k)))) ≡⟨ cong (λ a -> suc (suc (j + a))) (sym (ℕ+-assoc k j k))  ⟩ 
-    suc (suc (j + (k + j + k))) ≡⟨ cong (λ a -> suc (suc (j + (a + k)))) (ℕ+-comm k j)  ⟩
-    suc (suc (j + (j + k + k))) ≡⟨ cong (λ a -> (suc (suc (j + a)))) (ℕ+-assoc j k k)  ⟩ 
-    suc (suc (j + (j + (k + k)))) ≡⟨ cong (λ a -> suc (suc a)) (sym (ℕ+-assoc j j (k + k)))  ⟩ 
-    suc (suc (j + j + (k + k))) ≡⟨ cong suc (ℕ+-comm (suc (j + j)) (k + k)) ⟩ 
+    suc (j + k + suc (j + k)) 
+≡⟨ cong suc (ℕ+-comm (j + k) (suc (j + k)))  ⟩ 
+    suc (suc (j + k + (j + k))) 
+≡⟨ cong (λ a -> suc (suc a)) (ℕ+-assoc j k (j + k))  ⟩ 
+    suc (suc (j + (k + (j + k)))) 
+≡⟨ cong (λ a -> suc (suc (j + a))) (sym (ℕ+-assoc k j k))  ⟩ 
+    suc (suc (j + (k + j + k))) 
+≡⟨ cong (λ a -> suc (suc (j + (a + k)))) (ℕ+-comm k j)  ⟩
+    suc (suc (j + (j + k + k))) 
+≡⟨ cong (λ a -> (suc (suc (j + a)))) (ℕ+-assoc j k k)  ⟩ 
+    suc (suc (j + (j + (k + k)))) 
+≡⟨ cong (λ a -> suc (suc a)) (sym (ℕ+-assoc j j (k + k)))  ⟩ 
+    suc (suc (j + j + (k + k))) 
+≡⟨ cong suc (ℕ+-comm (suc (j + j)) (k + k)) ⟩ 
     suc (k + k) + suc (j + j) ≡⟨ cong₂ _+_  q p  ⟩ 
     m + n ≡⟨ ℕ+-comm m n  ⟩ 
     n + m
   ∎)
 \end{code}
-For a more thorough guide on Agda, I recommend checking out of of tutorials available on the Agda wiki. \cite{agdatutorial}\\
-
-%One might even wonder why anyone would be interested in such a tedious endeavour as formalizing mathematics. One answer might 
+For a more thorough guide on Agda, I recommend checking out one of tutorials available on the Agda wiki at \url{http://wiki.portal.chalmers.se/agda/pmwiki.php?n=Main.Othertutorials}.
 
 \section{Constructing real numbers in Agda}\label{sec: reals in agda}
-This work is an Agda implementation of the constructive definition of real numbers as given by Errett Bishop in Grundlehren Der Mathematischen Wissenschaften \cite{bishop:67}. 
+This work is an Agda implementation of the constructive definition of real numbers as given by Errett Bishop in Grundlehren Der Mathematischen Wissenschaften \cite{bishop:85} to work with the current Agda Standard Library (2.4.2). One existing module, \texttt{Data/Rational.agda} has been modified and two new modules, \texttt{Data/Rational/Properties.agda} and \texttt{Data/Real.agda} has been added.\\
+The modules are listed in their current state as attachments to this document, or can be found at .\\
 \subsection{Redefining rational numbers}
-The current current Agda Standard Library (2.4.2.2) contains only a small module Data.Rational in which rational numbers are defined, but lacks the necessary functions to define real numbers. Therefore I have used the contributions made by the GitHub user sabry at (\url{https://github.com/sabry/agda-stdlib/}) as a starting point. However, I have made one significant change to the definition of a rational number, by not requiring them to be coprime. It became apparent while proving theorems about rationals that the current requirement of coprimality (with the accompanying proof) became to tedious to work with. Therefore, instead of:
+The current current Agda Standard Library (2.4.2.2) contains only a small module Data.Rational in which rational numbers are defined, but lacks the necessary functions to define real numbers. Therefore I have used the contributions made by the GitHub user sabry at (\url{https://github.com/sabry/agda-stdlib/blob/master/src/Data/Rational.agda}) as a starting point. \\
+I have made a significant change to the definition of a rational number by not requiring the numerator and denominator to be coprime. While working with rationals it became apparent that requiring coprimality made theorem proving highly demanding, both for human effort and computer power. Therefore, instead of:
 \begin{code}
 record ℚ : Set where
   field
@@ -179,40 +193,39 @@ record ℚ : Set where
     numerator     : ℤ
     denominator-1 : ℕ
 \end{code}
-Another advantage of the latter definition is that it is closer to the way rational numbers are commonly defined. Bishop gives the following definition:
-\begin{blockquote}
-For us, a \textit{rational number} will be an expression of the form \textit{p/q} where $p$ and $q$ are integers with $q\neq0$.
-\end{blockquote}
-What still differs between our formal definition and Bishop's is the fact that Bishop allows negative numbers in the denominator, whereas we do not. This minor change does not have any significant impact in working with rational numbers, and it is more convenient to construct rational numbers in Agda by just allowing natural numbers larger than zero as denominators.
-
-The downside of not forcing rational numbers to always be given on their coprime form is that the equivalence relation, $≃$,  on rational numbers, given by:
+Skipping the requirement of coprimality makes certain statements easier to prove, and defining functions a lot simpler. On the other hand, consider the equivalence relation on rational numbers:
 \begin{code}
 _≃_ : Rel ℚ Level.zero
 p ≃ q = numerator p ℤ.* (+ suc (denominator-1 q)) ≡
         numerator q ℤ.* (+ suc (denominator-1 p))
   where open ℚ
 \end{code}
-is not equivalent to the ``identically equal to'' relation $\equiv$.
-
+Since we can have several elements in the same equivalence class, this relation is no longer synonomous with the identically equal relation, $\equiv$. This makes us unable to modify expressions with functions like cong and subst, and instead we have to show that the functions we define on rationals preserve the equivalence relation.\\
+It is also worth mentioning that we would rarely require rational numbers to be given on their coprime form in informal mathematics. The new definition makes working with rational numbers closer to how one might work with rational numbers using pen and paper. Compare the formal definitions with Bishop's definition of a rational number:\\
+\blockquote{
+For us, a \textit{rational number} will be an expression of the form \textit{p/q} where $p$ and $q$ are integers with $q\neq0$.
+}\\
+What still differs between the two definitions is the fact that Bishop allows negative numbers in the denominator, whereas we do not. This minor change does not have any significant impact in working with rational numbers, and is only for convenience. We can more easily convenient to construct rational numbers in Agda by just allowing natural numbers larger than zero as denominators.\\
+Several lemmas used in the module \texttt{Data/Real.agda} can be found in the new module \texttt{Data/Rational.agda}
 \subsection{Definition and equivalence of real numbers}
-I have been following Bishops definitions as closely as possible, with only a couple of small changes. Where Bishop describes a sequence as a mapping of the stricly positive integers to rationals, in Agda it is much more convenient to have a sequence starting from zero. Thus where Bishop writes:
-\begin{blockquote}
+The definition of a real number is almost identical to the definition given by Bishop, with one minor modification. Where Bishop describes a sequence as a mapping of the stricly positive integers to rationals, we will define it as a mapping from the natural numbers to rationals. This makes things a bit nicer. Where Bishop writes:
+\blockquote{
 A sequence of rational numbers is \textit{regular} if 
 $$| x_m - x_n | \leq m^{-1} + n^{-1} (m, n \in \mathbb{Z}^*)$$
 A \textit{real number} is a regular sequence of rational numbers.
-\end{blockquote}
-
-Instead, we will create the sequence as a mapping from the natural numbers. We write as follows:
+}
+we will write the following:
 \begin{code}
---Constructs a real number by a giving a sequence and a proof that the sequence is regular
+--A real number is defined as sequence and 
+--a proof that the sequence is regular
 record ℝ : Set where
   constructor Real
   field
     f : ℕ -> ℚ
-    reg : {n m : ℕ} -> (∣ (f n) ℚ.- (f m) ∣) ℚ.≤ ((+ 1) ÷suc n) ℚ.+ ((+ 1) ÷suc m)
+    reg : {n m : ℕ} -> ∣ f n ℚ.- f m ∣ ℚ.≤ (suc n)⁻¹ ℚ.+ (suc n)⁻¹
 
 \end{code}
-
+TODO: attachments
 \bibliography{citations}
 \bibliographystyle{kluwer}
 \end{document}
