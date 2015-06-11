@@ -1,5 +1,7 @@
 \documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
 \usepackage{listings}
+\usepackage{xcolor}
 \usepackage{amsmath}
 \usepackage{amstext}
 \usepackage{graphicx}
@@ -34,6 +36,8 @@
 \DeclareUnicodeCharacter{955}{\ensuremath{\lambda}}
 \DeclareUnicodeCharacter{931}{\ensuremath{\Sigma}}
 \DeclareUnicodeCharacter{8803}{\ensuremath{\overline{\equiv}}}
+\DeclareUnicodeCharacter{11388}{\ensuremath{}}
+
 
 % Add more as you need them (shouldn’t happen often).
 
@@ -47,11 +51,23 @@
   {code}{Verbatim}
   {} % Add fancy options here if you like.
 
+\lstset{%
+  language=[LaTeX]TeX,
+  backgroundcolor=\color{gray!25},
+  basicstyle=\ttfamily,
+  breaklines=true,
+  columns=fullflexible
+}
 
 \title{Formalizing Real Numbers in Agda}
 \author{Martin Lundfall}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%TODO: 
+%Double check constructivism vs classical mathematics
+%Linebreaking in code environment?
+%Syntax highlighting?
+%Attachments
 \begin{document}
 
 \maketitle
@@ -102,7 +118,7 @@ A sequence $x$ of rational numbers $x_1, x_2, x_3, \dots$ is \textbf{convergent}
 Constructivists are not satisfied with this definition, because it does not entail instructions of \textit{how} the integer N is to be chosen. Claiming that something exists must for a constructivist also be followed by an explicit construction of the object.
 
 \subsection{Formal mathematics in Agda}\label{subsec: Agda}
-In this work, I formalize the constructive notion of real numbers as described by Errett Bishop in Grundlehren Der Mathematischen Wissenschaften \cite{bishop:85} in the dependently-typed programming language of Agda. Agda is a functional programming language with a syntax similar to Haskell that essentially deals with two fundamental elements of mathematics, sets and functions. For example, here is the definition of a natural number and addition with natural numbers, $\mathbb{N}$ in Agda:\\
+In this work, I formalize the constructive notion of real numbers as described by Errett Bishop in Constructive Analysis \cite{bishop:85} in the dependently-typed programming language of Agda. Agda is a functional programming language with a syntax similar to Haskell that essentially deals with two fundamental elements of mathematics, sets and functions. For example, here is the definition of a natural number and addition with natural numbers, $\mathbb{N}$ in Agda:\\
 
 \begin{code}
 data ℕ : Set where
@@ -170,11 +186,11 @@ o+o {m} {n} (j , p) (k , q) = suc (j + k) ,
     n + m
   ∎)
 \end{code}
-For a more thorough guide on Agda, I recommend checking out one of tutorials available on the Agda wiki at \url{http://wiki.portal.chalmers.se/agda/pmwiki.php?n=Main.Othertutorials}.
+For a more thorough guide on Agda, I recommend checking out one of tutorials available on the Agda wiki at \url{http://wiki.portal.chalmers.se/agda/pmwiki.php?n=Main.Othertutorials}. The following segment of this document will assume some familiarity with the Agda programming language.
 
 \section{Constructing real numbers in Agda}\label{sec: reals in agda}
-This work is an Agda implementation of the constructive definition of real numbers as given by Errett Bishop in Grundlehren Der Mathematischen Wissenschaften \cite{bishop:85} to work with the current Agda Standard Library (2.4.2). One existing module, \texttt{Data/Rational.agda} has been modified and two new modules, \texttt{Data/Rational/Properties.agda} and \texttt{Data/Real.agda} has been added.\\
-The modules are listed in their current state as attachments to this document, or can be found at .\\
+This work is an Agda implementation of the constructive definition of real numbers as given by Errett Bishop in \textit{Constructive Analysis} \cite{bishop:85} to work with the current Agda Standard Library (2.4.2). One existing module, \texttt{Data/Rational.agda} has been modified and two new modules, \texttt{Data/Rational/Properties.agda} and \texttt{Data/Real.agda} has been added.\\
+The modules are listed in their current state as attachments to this document and updated versions can be found at \url{https://github.com/MrChico/agda-stdlib} .\\
 \subsection{Redefining rational numbers}
 The current current Agda Standard Library (2.4.2.2) contains only a small module Data.Rational in which rational numbers are defined, but lacks the necessary functions to define real numbers. Therefore I have used the contributions made by the GitHub user sabry at (\url{https://github.com/sabry/agda-stdlib/blob/master/src/Data/Rational.agda}) as a starting point. \\
 I have made a significant change to the definition of a rational number by not requiring the numerator and denominator to be coprime. While working with rationals it became apparent that requiring coprimality made theorem proving highly demanding, both for human effort and computer power. Therefore, instead of:
@@ -223,9 +239,220 @@ record ℝ : Set where
   field
     f : ℕ -> ℚ
     reg : {n m : ℕ} -> ∣ f n ℚ.- f m ∣ ℚ.≤ (suc n)⁻¹ ℚ.+ (suc n)⁻¹
-
 \end{code}
-TODO: attachments
+Following Bishop, we then define an equivalence relation by:
+\begin{code}
+-- Equality of real numbers.
+infix 4 _≃_
+
+_≃_ : Rel ℝ Level.zero
+x ≃ y =  {n : ℕ} -> ∣ ℝ.f x n - ℝ.f y n ∣ ≤ (suc n)⁻¹ ℚ.+ (suc n)⁻¹
+\end{code}
+Equality looks very similar to regularity of a sequence, which makes sense. The difference between two rational numbers of the sequence given the same argument can become arbritrarily small as n increases.\\
+To prove that the relation ≃ defines an equivalence relation on the real numbers we must show that it satisfies three conditions:
+\begin{enumerate}
+\item \textbf{Reflexivity} $x ≃ x$ for all $x \in \mathbb{R}$
+\item \textbf{Symmetry} If $x ≃ y$ then $y ≃ x$ for all $x, y \in \mathbb{R}$
+\item \textbf{Transitivity} If $x ≃ y$ and $y ≃ z$ then $x ≃ z$ for all $x, y, z \in \mathbb{R}$
+\end{enumerate}
+Reflexivity is easy enough to show, all we have to do is give the proof that the sequence defining x converges:
+\begin{code}
+--reflexitivity
+refl≃ : {x : ℝ} -> (x ≃ x)
+refl≃ {x} = ℝ.reg x
+\end{code}
+Symmetry seems like an easy task as well. Informally, all we need to show is that $| x_n - y_n | = | y_n - x_n|$. But showing this formally is a bit more cumbersome. The strategy is as follows: first we show that $- (a - b) = b - a$ for all rational numbers a and b and then that $| - c | = | c |$ for a rational number c. To show the first part, we must first show that the statement is true for integers.\\
+Here are the lemmas needed to show symmetry of the equivalence relation (found in \texttt{Data/Rational/Properties.agda}):
+\begin{code}
+--Lemmas helping to show symmetry of the equivalence relation
+ defined on the real numbers
+
+⊖-swap : ∀ a b → a ℤ.⊖ b ≡ ℤ.- (b ℤ.⊖ a)
+⊖-swap zero    zero    = refl
+⊖-swap (suc _) zero    = refl
+⊖-swap zero    (suc _) = refl
+⊖-swap (suc a) (suc b) = ⊖-swap a b
+
+ℤ-swap : (a b : ℤ) -> (ℤ.- (a ℤ.- b) ≡ b ℤ.- a)
+ℤ-swap -[1+ n ] -[1+ n₁ ] = P.sym (⊖-swap n n₁)
+ℤ-swap -[1+ n ] (+ zero) = refl
+ℤ-swap -[1+ n ] (+ suc n₁) = trans (cong (λ a -> + suc (suc a)) 
+   (+-comm n n₁)) (cong (λ a -> + a) (P.sym (+-suc (suc n₁) n)))
+ℤ-swap (+ zero) -[1+ n₁ ] = refl
+ℤ-swap (+ suc n) -[1+ n₁ ] = cong (λ a -> -[1+ a ]) (+-comm n (suc n₁))
+ℤ-swap (+ zero) (+ zero) = refl
+ℤ-swap (+ zero) (+ suc n₁) = cong (λ a -> + a) (P.sym (+-right-identity (suc n₁)))
+ℤ-swap (+ suc n) (+ zero) = cong (λ a -> -[1+ a ]) (+-right-identity n)
+ℤ-swap (+ suc n) (+ suc n₁) = P.sym (⊖-swap n₁ n)
+
+ℚ-swap : (x y : ℚ) -> (- (y - x) ≡ x - y)
+ℚ-swap (-[1+ n₁ ] ÷suc d₁) (-[1+ n₂ ] ÷suc d₂) = cong₂ (λ a b -> (a ÷suc (pred b))) (ℤ-swap (-[1+ n₂ ] ℤ.* + suc d₁) (-[1+ n₁ ] ℤ.* + suc d₂)) (*-comm (suc d₂) (suc d₁))
+ℚ-swap (-[1+ n₁ ] ÷suc d₁) ((+ zero) ÷suc d₂) = cong (λ a -> (-[1+ n₁ ] ℤ.* (+ suc d₂)) ℚ.÷suc (pred a))(*-comm (suc d₂) (suc d₁))
+ℚ-swap (-[1+ n₁ ] ÷suc d₁) ((+ suc n₂) ÷suc d₂) = cong₂ (λ a b -> (a ÷suc (pred b))) (ℤ-swap (+ suc n₂ ℤ.* + suc d₁) (-[1+ n₁ ] ℤ.* + suc d₂)) (*-comm (suc d₂) (suc d₁))
+ℚ-swap ((+ zero) ÷suc d₁) (-[1+ n₂ ] ÷suc d₂) = cong₂ (λ a b -> (a ÷suc (pred b))) (ℤ-swap (-[1+ n₂ ] ℤ.* + suc d₁) (+ zero ℤ.* + suc d₂)) (*-comm (suc d₂) (suc d₁))
+ℚ-swap ((+ suc n₁) ÷suc d₁) (-[1+ n₂ ] ÷suc d₂) = cong₂ (λ a b -> (a ÷suc (pred b))) (ℤ-swap (-[1+ n₂ ] ℤ.* + suc d₁) (+ suc n₁ ℤ.* + suc d₂)) (*-comm (suc d₂) (suc d₁))
+ℚ-swap ((+ zero) ÷suc d₁) ((+ zero) ÷suc d₂) = cong (λ a -> ((+ zero) ÷suc (pred a)))(*-comm (suc d₂) (suc d₁))
+ℚ-swap ((+ zero) ÷suc d₁) ((+ suc n₂) ÷suc d₂) = cong₂ (λ a b -> (a ÷suc (pred b))) (ℤ-swap (+ suc n₂ ℤ.* + suc d₁) (+ zero ℤ.* + suc d₂)) (*-comm (suc d₂) (suc d₁))
+ℚ-swap ((+ suc n) ÷suc d₁) ((+ zero) ÷suc d₂) = cong₂ (λ a b -> (a ÷suc (pred b))) (ℤ-swap (+ zero ℤ.* + suc d₁) (+ suc n ℤ.* + suc d₂)) (*-comm (suc d₂) (suc d₁))
+ℚ-swap ((+ suc n₁) ÷suc d₁) ((+ suc n₂) ÷suc d₂) = cong₂ (λ a b -> (a ÷suc (pred b))) (ℤ-swap (+ suc n₂ ℤ.* + suc d₁) (+ suc n₁ ℤ.* + suc d₂)) (*-comm (suc d₂) (suc d₁))
+
+ℚabs₁ : (x : ℚ) -> (∣ ℚ.- x ∣ ≡ ∣ x ∣)
+ℚabs₁ (-[1+ n ] ÷suc d₁) = refl
+ℚabs₁ ((+ zero) ÷suc d₁) = refl
+ℚabs₁ ((+ suc n) ÷suc d₁) = refl
+
+ℚabs₂ : (x y : ℚ) -> (∣ x - y ∣ ≡ ∣ y - x ∣)
+ℚabs₂ x y = trans (cong ∣_∣ (P.sym (ℚ-swap x y) ))(ℚabs₁ (y - x))
+\end{code}
+Our proof that the relation ≃ on real numbers is symmetric can now simply be given by substituting \texttt{| ℝ.f x n - ℝ.f y n |} for \texttt{| ℝ.f y n - ℝ.f x n |}. x≃y is a variable which has x ≃ y as type, which given a natural number n (as implicit argument) it will give the relation \texttt{∣ ℝ.f x n - ℝ.f y n ∣ ≤ (suc n)⁻¹ ℚ.+ (suc n)⁻¹}.
+\begin{code}
+  --symmetry
+  sym≃ : {x y : ℝ} -> (x ≃ y -> y ≃ x)
+  sym≃ {x}{y} x≃y = λ {n} -> (subst (λ a -> a ≤ (suc n)⁻¹ ℚ.+ (suc n)⁻¹) (ℚabs₂ (ℝ.f x n) (ℝ.f y n))) (x≃y {n})
+\end{code}
+Showing transitivity is a bit more of a challenge. Luckily, Bishop gives us a hint. (Lemma 2.3 in \textit{Constructive analysis} \cite{bishop:85})
+\blockquote{
+(2.3) \textbf{Lemma.} The real numbers $x\equiv(x_n)$ and $y\equiv(y_n)$ are equal if and only if for each positive integer $j$ there exists a positive integer $N_j$ such that
+$$|x_n - y_n| \leq j^{-1} \quad (n \geq N_j)$$
+}
+I have not yet proved the formal version of this lemma its definition is as follows:
+\begin{code}
+postulate Bishopslem : {x y : ℝ} -> ({j : ℕ} -> Σ ℕ λ Nⱼ -> ({m : ℕ} -> ∣ ℝ.f x (Nⱼ ℕ.+ m) - ℝ.f y (Nⱼ ℕ.+ m) ∣ ≤ (suc j)⁻¹)) → (x ≃ y)
+\end{code}
+Note that if we set the n in Bishops definition to $n = Nⱼ ℕ.+ m$, the two definitions are equivalent.
+Using this lemma we can make a strategy of how to solve transitivity. The proof idea is this:\\
+We can use the triangle inequality to show that the relation
+\begin{code}
+| ℝ.f x n - ℝ.f z n | ≤ 
+| ℝ.f x n - ℝ.f y n | + | ℝ.f y n - ℝ.f z n |
+\end{code} 
+is true for all natural numbers n. Then, if we know that \\
+\texttt{| ℝ.f x n - ℝ.f y n | ≤ (suc n)⁻¹ + (suc n)⁻¹} and \\
+\texttt{| ℝ.f y n - ℝ.f z n | ≤ (suc n)⁻¹ + (suc n)⁻¹} for all natural numbers n, we can choose a $N_j$ given any $j$ such that the relation\\
+\texttt{(suc n)⁻¹ + (suc n)⁻¹ + (suc n)⁻¹ + (suc n)⁻¹ ≤ (suc j)⁻¹}\\
+is true for all $n \geq N_j$. We see that if we chose $N_j = 4j + 4$ we see that
+$$\frac{1}{4j + 4}+\frac{1}{4j + 4}+\frac{1}{4j + 4}+\frac{1}{4j + 4}=\frac{4}{4j+4}=\frac{1}{j + 1}$$ and that the relation will hold for all $n$ greater than $N_j$
+To formalize this proof we will need a couple of additional lemmas. First, we need to show that addition with rational numbers preserves the equivalence relation on rationals as defined previously. This is the proof listed as +-exist below. It looks quite substantial, but we are mostly only changing the order in which things are multiplied together.
+\begin{code}
+--Since the rationals are defined without a requirement of coprimality, our equivalence relation on rational numbers, ≈, is not synonymous with ≡ and therefore we cannot use subst or cong to modify expressions. Instead, we have to show for every function defined on rationals that it preserves the equality relation.
++-exist :  _+_ Preserves₂ _≃_ ⟶ _≃_ ⟶ _≃_
++-exist {p}{q}{x}{y} pq xy =  begin 
+        (pn ℤ.* xd ℤ.+ xn ℤ.* pd) ℤ.* (qd ℤ.* yd) ≡⟨ proj₂ ℤdistrib (qd ℤ.* yd) (pn ℤ.* xd) (xn ℤ.* pd)   ⟩
+        pn ℤ.* xd ℤ.* (qd ℤ.* yd) ℤ.+ xn ℤ.* pd ℤ.* (qd ℤ.* yd) ≡⟨ cong₂ ℤ._+_ (ℤ*-assoc pn xd (qd ℤ.* yd)) (ℤ*-assoc xn pd (qd ℤ.* yd)) ⟩
+        pn ℤ.* (xd ℤ.* (qd ℤ.* yd)) ℤ.+ xn ℤ.* (pd ℤ.* (qd ℤ.* yd)) ≡⟨ cong₂ (λ a b -> pn ℤ.* a ℤ.+ xn ℤ.* (pd ℤ.* b)) (P.sym (ℤ*-assoc xd qd yd)) (ℤ*-comm qd yd) ⟩
+        pn ℤ.* (xd ℤ.* qd ℤ.* yd) ℤ.+ xn ℤ.* (pd ℤ.* (yd ℤ.* qd)) ≡⟨ cong₂ (λ a b -> pn ℤ.* (a ℤ.* yd) ℤ.+ xn ℤ.* b) (ℤ*-comm xd qd) (P.sym (ℤ*-assoc pd yd qd)) ⟩
+        pn ℤ.* (qd ℤ.* xd ℤ.* yd) ℤ.+ xn ℤ.* (pd ℤ.* yd ℤ.* qd) ≡⟨ cong₂ (λ a b -> pn ℤ.* a ℤ.+ xn ℤ.* (b ℤ.* qd)) (ℤ*-assoc qd xd yd) (ℤ*-comm pd yd) ⟩
+        pn ℤ.* (qd ℤ.* (xd ℤ.* yd)) ℤ.+ xn ℤ.* (yd ℤ.* pd ℤ.* qd) ≡⟨ cong₂ (λ a b -> a ℤ.+ xn ℤ.* b) (P.sym (ℤ*-assoc pn qd (xd ℤ.* yd))) (ℤ*-assoc yd pd qd) ⟩
+        pn ℤ.* qd ℤ.* (xd ℤ.* yd) ℤ.+ xn ℤ.* (yd ℤ.* (pd ℤ.* qd)) ≡⟨ cong₂ (λ a b -> a ℤ.* (xd ℤ.* yd) ℤ.+ b) pq  ((P.sym (ℤ*-assoc xn yd (pd ℤ.* qd)))) ⟩
+        qn ℤ.* pd ℤ.* (xd ℤ.* yd) ℤ.+ xn ℤ.* yd ℤ.* (pd ℤ.* qd) ≡⟨ cong₂ (λ a b -> a ℤ.+ b ℤ.* (pd ℤ.* qd)) (ℤ*-assoc qn pd (xd ℤ.* yd)) xy ⟩
+        qn ℤ.* (pd ℤ.* (xd ℤ.* yd)) ℤ.+ yn ℤ.* xd ℤ.* (pd ℤ.* qd) ≡⟨ cong₂ (λ a b -> qn ℤ.* (pd ℤ.* a) ℤ.+ yn ℤ.* xd ℤ.* b) (ℤ*-comm xd yd) (ℤ*-comm pd qd) ⟩
+        qn ℤ.* (pd ℤ.* (yd ℤ.* xd)) ℤ.+ yn ℤ.* xd ℤ.* (qd ℤ.* pd) ≡⟨ cong₂ (λ a b -> qn ℤ.* a ℤ.+ b) (P.sym (ℤ*-assoc pd yd xd )) (ℤ*-assoc yn xd (qd ℤ.* pd)) ⟩
+        qn ℤ.* (pd ℤ.* yd ℤ.* xd) ℤ.+ yn ℤ.* (xd ℤ.* (qd ℤ.* pd)) ≡⟨ cong₂ (λ a b -> qn ℤ.* (a ℤ.* xd) ℤ.+ yn ℤ.* b) (ℤ*-comm pd yd) (P.sym (ℤ*-assoc xd qd pd )) ⟩
+        qn ℤ.* (yd ℤ.* pd ℤ.* xd) ℤ.+ yn ℤ.* (xd ℤ.* qd ℤ.* pd) ≡⟨ cong₂ (λ a b -> qn ℤ.* a ℤ.+ yn ℤ.* (b ℤ.* pd)) (ℤ*-assoc yd pd xd) (ℤ*-comm xd qd) ⟩
+        qn ℤ.* (yd ℤ.* (pd ℤ.* xd)) ℤ.+ yn ℤ.* (qd ℤ.* xd ℤ.* pd) ≡⟨ cong₂ (λ a b -> a ℤ.+ yn ℤ.* b) (P.sym (ℤ*-assoc qn yd (pd ℤ.* xd))) (ℤ*-assoc qd xd pd) ⟩
+        qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* (qd ℤ.* (xd ℤ.* pd)) ≡⟨ cong (λ a -> qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* (qd ℤ.* a)) (ℤ*-comm xd pd) ⟩
+        qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* (qd ℤ.* (pd ℤ.* xd)) ≡⟨ cong (λ a -> qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ a) (P.sym (ℤ*-assoc yn qd (pd ℤ.* xd))) ⟩
+        qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* qd ℤ.* (pd ℤ.* xd) ≡⟨ P.sym (proj₂ ℤdistrib (pd ℤ.* xd) (qn ℤ.* yd) (yn ℤ.* qd)) ⟩
+        (qn ℤ.* yd ℤ.+ yn ℤ.* qd) ℤ.* (pd ℤ.* xd)
+        ∎
+         where
+           open P.≡-Reasoning
+           pn = ℚ.numerator p
+           pd = ℚ.denominator p
+           qn = ℚ.numerator q
+           qd = ℚ.denominator q
+           xn = ℚ.numerator x
+           xd = ℚ.denominator x
+           yn = ℚ.numerator y
+           yd = ℚ.denominator y
+\end{code}
+We also want to be able to reduce the sum of four rationals $\frac{1}{4j + j} + \frac{1}{4j + j} + \frac{1}{4j + j} + \frac{1}{4j + j} = \frac{1}{j +1}$ as described in the proof idea above. For that we need the following lemmas.
+\begin{code}
++-red₁ : (n : ℕ) -> ((+ 1) ÷suc (suc (n ℕ.+ n)) ℚ.+ (+ 1) ÷suc (suc (n ℕ.+ n)) ℚ.≃ (+ 1) ÷suc n)
++-red₁ n = begin 
+      ((+ 1) ℤ.* k ℤ.+ (+ 1) ℤ.* k) ℤ.* + suc n ≡⟨ cong (λ a -> ((a ℤ.+ a) ℤ.* + suc n)) (proj₁ ℤ*-identity k) ⟩
+      (k ℤ.+ k) ℤ.* + suc n ≡⟨ cong (λ a -> a ℤ.* + suc n) (P.sym (lem k)) ⟩
+      (+ 2) ℤ.* k ℤ.* (+ suc n) ≡⟨ cong (λ a -> a ℤ.* + suc n) (ℤ*-comm (+ 2) k) ⟩
+      k ℤ.* (+ 2) ℤ.* (+ suc n) ≡⟨ ℤ*-assoc k (+ 2) (+ suc n) ⟩
+      k ℤ.* ((+ 2) ℤ.* (+ suc n)) ≡⟨ cong (λ a -> k ℤ.* a) (lem (+ suc n)) ⟩
+      k ℤ.* (+ suc (n ℕ.+ suc n)) ≡⟨ cong (λ a -> k ℤ.* + suc a) (+-comm n (suc n)) ⟩
+      k ℤ.* k ≡⟨ P.sym (proj₁ ℤ*-identity (k ℤ.* k)) ⟩
+      (+ 1) ℤ.* (k ℤ.* k)
+    ∎
+    where
+      open P.≡-Reasoning
+      k = + suc (suc (n ℕ.+ n))
+      lem : (j : ℤ) -> ((+ 2) ℤ.* j ≡ j ℤ.+ j)
+      lem j = trans (proj₂ ℤdistrib j (+ 1) (+ 1)) (cong₂ ℤ._+_ (proj₁ ℤ*-identity j) (proj₁ ℤ*-identity j)) 
+
++-red₂ : (n : ℕ) -> (((+ 1) ÷suc (suc ((suc (n ℕ.+ n)) ℕ.+ (suc (n ℕ.+ n)))) + (+ 1) ÷suc (suc ((suc (n ℕ.+ n)) ℕ.+ (suc (n ℕ.+ n))))) + ((+ 1) ÷suc (suc ((suc (n ℕ.+ n)) ℕ.+ (suc (n ℕ.+ n)))) + (+ 1) ÷suc (suc ((suc (n ℕ.+ n)) ℕ.+ (suc (n ℕ.+ n))))) ℚ.≃ ((+ 1) ÷suc n))
++-red₂ n = IsEquivalence.trans ℚ.isEquivalence {start} {middle} {end} (+-exist {1÷k + 1÷k}{1÷j}{1÷k + 1÷k}{1÷j} (+-red₁ j) (+-red₁ j)) (+-red₁ n)
+  where
+    j = suc (n ℕ.+ n)
+    k = suc (j ℕ.+ j)
+    1÷j = (+ 1) ÷suc j
+    1÷k = (+ 1) ÷suc k
+    start = (1÷k + 1÷k) + (1÷k + 1÷k)
+    middle = 1÷j + 1÷j
+    end = (+ 1) ÷suc n
+\end{code}
+We also need a minor lemma proving that $\frac{1}{m + n} \leq \frac{1}{m}$ for all natural numbers m and n.
+\begin{code}
+ℚ≤lem : {m n : ℕ} -> ((+ 1) ÷suc (m ℕ.+ n) ≤ (+ 1) ÷suc m)
+ℚ≤lem {m}{n} =  *≤* (ℤ.+≤+ (ℕ.s≤s ((m≤m+n m n) +-mono (z≤n))))
+\end{code}
+The triangle inequality is not yet proven at this time, but left as a postulate.
+\begin{code}
+postulate ℚtriang : (x y z : ℚ) -> (∣ x - z ∣ ≤ ∣ x - y ∣ + ∣ y - z ∣)
+\end{code}
+Just like we did for the equivalence relation on rational numbers we need to show that inequality of rational numbers is preserved under addition. The idea of this proof is similar to the one proving \texttt{+-exist}, but I have not been able to formalize it at this time.
+\begin{code}
+postulate _ℚ+-mono_ :  _+_ Preserves₂ _≤_ ⟶ _≤_ ⟶ _≤_
+\end{code}
+We are now ready to give the proof of transitivity of the equivalence relation on real numbers.
+\begin{code}
+trans≃ : {x y z : ℝ} -> (x ≃ y) -> (y ≃ z) -> (x ≃ z)
+trans≃ {x}{y}{z} x≃y y≃z = Bishopslem {x}{z} (λ {j} -> 
+  Nⱼ {j} , λ {n} -> (≤trans 
+    (ℚtriang (ℝ.f x (Nⱼ {j} ℕ.+ n)) (ℝ.f y (Nⱼ {j} ℕ.+ n)) (ℝ.f z (Nⱼ {j} ℕ.+ n))) 
+    (≤trans 
+      ((x≃y {Nⱼ {j} ℕ.+ n}) ℚ+-mono (y≃z {Nⱼ {j} ℕ.+ n})) 
+      (≤trans 
+        (((ℚ≤lem {Nⱼ {j}} {n}) ℚ+-mono (ℚ≤lem {Nⱼ {j}} {n})) ℚ+-mono (((ℚ≤lem {Nⱼ {j}} {n}) ℚ+-mono (ℚ≤lem {Nⱼ {j}} {n}))))
+        (≈->≤ (+-red₂ j) )))))
+  where
+    ≈->≤ = IsPreorder.reflexive (IsPartialOrder.isPreorder (IsTotalOrder.isPartialOrder (IsDecTotalOrder.isTotalOrder (DecTotalOrder.isDecTotalOrder ℚ.decTotalOrder))))
+    ≤trans = DecTotalOrder.trans  ℚ.decTotalOrder
+    Nⱼ = λ {j} -> suc ((suc (j ℕ.+ j) ℕ.+ (suc (j ℕ.+ j))))
+\end{code}
+This proves that the relation defined on the real numbers indeed is an equivalence relation and we can create an instance of the type \texttt{IsEquivalence}.
+\begin{code}
+isEquivalence : IsEquivalence _≃_
+isEquivalence = record {
+  refl = λ {x} -> refl≃ {x} ;
+  sym = λ {x}{y} -> sym≃ {x}{y};
+  trans = λ {a}{b}{c} -> trans≃ {a}{b}{c}
+  }
+\end{code}
+\section{Summary and future work}
+This work has established much of the framework necessary to formalize the construcitve notion of a real number as described by Errett Bishop in \textit{Constructive Analysis} \cite{bishop:85}. To complete the proof that the relation we have defined on real numbers is an equivalence relation there are three major lemmas that need to be solved:
+\begin{enumerate}
+\item The triangle inequality
+\begin{code}
+ℚtriang : (x y z : ℚ) -> (∣ x - z ∣ ≤ ∣ x - y ∣ + ∣ y - z ∣)
+ℚtriang x y z = ?
+\end{code}
+\item Bishop's lemma
+\begin{code}
+Bishopslem : {x y : ℝ} -> ({j : ℕ} -> Σ ℕ λ Nⱼ -> ({m : ℕ} -> ∣ ℝ.f x (Nⱼ ℕ.+ m) - ℝ.f y (Nⱼ ℕ.+ m) ∣ ≤ (suc j)⁻¹)) → (x ≃ y)
+BIshopslem {x}{y}
+\end{code}
+\item Addition preserves inequality
+\begin{code}
+_ℚ+-mono_ :  _+_ Preserves₂ _≤_ ⟶ _≤_ ⟶ _≤_
+p₁≤q₁ ℚ+-mono p₂≤q₂ = ?
+\end{code}
+\end{enumerate}
 \bibliography{citations}
 \bibliographystyle{kluwer}
 \end{document}
