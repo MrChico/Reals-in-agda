@@ -4,32 +4,40 @@
 \usepackage{xcolor}
 \usepackage{amsmath}
 \usepackage{amstext}
+\usepackage{amsthm}
 \usepackage{graphicx}
 \usepackage[colorlinks=true, breaklinks=true]{hyperref}
 \usepackage{hyperref}
 \usepackage{csquotes}
 \usepackage{harvard}
 \usepackage{agda}
+\usepackage{float}
+\usepackage{geometry}
  % The following packages are needed because unicode
  % is translated (using the next set of packages) to
  % latex commands. You may need more packages if you
  % use more unicode characters:
 
- \usepackage{amssymb}
- \usepackage{bbm}
- \usepackage[english]{babel} 
+\usepackage{amssymb}
+\usepackage{bbm}
+\usepackage[english]{babel} 
 
  % This handles the translation of unicode to latex:
 
- \usepackage{ucs}
- \usepackage[utf8x]{inputenc}
- \usepackage{autofe}
- \usepackage{verbatim}
- \usepackage{amssymb}
-% Some characters that are not automatically defined
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage{autofe}
+\usepackage{verbatim}
+\usepackage{amssymb}
+ % Some characters that are not automatically defined
 % (you figure out by the latex compilation errors you get),
 % and you need to define:
 
+\DeclareUnicodeCharacter{737}{\ensuremath{^l}}
+\DeclareUnicodeCharacter{8799}{\ensuremath{\stackrel{?}{=}}}
+\DeclareUnicodeCharacter{8802}{\ensuremath{\not\equiv}}
+\DeclareUnicodeCharacter{9666}{\ensuremath{\blacktriangleleft}}
+\DeclareUnicodeCharacter{9667}{\ensuremath{\triangleleft}}
 \DeclareUnicodeCharacter{8988}{\ensuremath{\ulcorner}}
 \DeclareUnicodeCharacter{8989}{\ensuremath{\urcorner}}
 \DeclareUnicodeCharacter{8718}{\ensuremath{\blacksquare}}
@@ -37,7 +45,8 @@
 \DeclareUnicodeCharacter{931}{\ensuremath{\Sigma}}
 \DeclareUnicodeCharacter{8803}{\ensuremath{\overline{\equiv}}}
 \DeclareUnicodeCharacter{11388}{\ensuremath{}}
-
+\DeclareUnicodeCharacter{8255}{\ensuremath{\_}}
+\DeclareUnicodeCharacter{8760}{\ensuremath{\dot{-}}}
 
 % Add more as you need them (shouldn’t happen often).
 
@@ -51,7 +60,7 @@
   {code}{Verbatim}
   {} % Add fancy options here if you like.
 
-\lstset{%
+\lstset{
   language=[LaTeX]TeX,
   backgroundcolor=\color{gray!25},
   basicstyle=\ttfamily,
@@ -64,18 +73,15 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %TODO: 
-%Double check constructivism vs classical mathematics
-%Linebreaking in code environment?
-%Syntax highlighting?
-%Attachments
+
 \begin{document}
 
 \maketitle
 \begin{abstract}
-The constructive notion of real numbers was formalized by Errett Bishop in his 1967 book \textit{Foundations of Constructive Analysis} \cite{bishop:85}, in which he showed that most major theorems of real analysis could be proven with constructive methods. This work is a first step towards formalizing this notion in the dependently typed functional programming language and proof assistant Agda. Using the Agda Standard Library and additional work by the GitHub user sabry \cite{sabry}, a major step towards formalizing the definition of real numbers and the equivalence relation is taken. In the process we present an alternate definition of rational numbers in Agda and prove some important statements about functions on rationals.
+With his iconic book \textit{Foundations of Constructive Analysis} \cite{bishop1985constructive}, Errett Bishop presented the constructive notion of a real number and showed that many of the important theorems of real analysis could be proven without using the law of the excluded middle. This paper aims to show how this notion can be formalized in the dependently typed programming language of Agda. Using the Agda Standard Library (v0.9) and additional work by the GitHub user sabry \cite{sabry}, a major step towards formalizing the definition of real numbers and the equivalence relation on them is taken. In the process, an alternate definition of rational numbers in Agda is presented and many important statements on rationals are proven.
 \end{abstract}
 \begin{comment}
-n\begin{abstract}
+\begin{abstract}
 The decentralized infrastructure of the block chain technology Ethereum opens a new set of possibilities for sharing content in a programmable environment. In particular, it is highly suitable for creating a standard library of formalized mathematics to which everyone can add contributions. The database can in theory be automatically checked for validity and to avoid unnecessary repetitions, scanned for relevant results, or even serve as an interactive foundation of a formalized structure of knowledge. The trust-less nature of Ethereum allows communities to make democratic decisions on what contributions should be included in the database, or place bounties on particularly sought functions or proofs.
 \end{abstract}
 \end{comment}
@@ -84,41 +90,50 @@ The decentralized infrastructure of the block chain technology Ethereum opens a 
 \clearpage
 \section{Introduction}\label{sec: Introduction}
 \subsection{Formal and informal mathematics}\label{subsec: formal & informal}
-The term ``Formalized mathematics'' might strike readers unfamiliar with the topic as a pleonasm. What could possibly be more formal than the rigor in which mathematical proofs are presented? But as we will see, a formal approach to mathematics looks fundamentally different from traditional mathematical reasoning. The formalized approach to mathematics strives to lay out the complete path from axioms and definitions to proofs and results, without any step along the way being subject to interpretation. To illustrate what is meant by this, consider a simple informal proof showing that the sum of two odd numbers is equal.
+The term ``Formalized mathematics'' might strike readers unfamiliar with the topic as a pleonasm. What could possibly be more formal than the rigor in which mathematical proofs are presented? But as we will see, a formal approach to mathematics looks fundamentally different from traditional mathematical reasoning. In formal mathematics, one strives to lay out the complete path from axioms to conclusion, without any step along the way being subject to interpretation. To illustrate what is meant by this, consider a simple informal proof showing that the sum of two odd numbers is even.
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\theoremstyle{definition}
+\begin{definition}[Even and odd numbers]
+%\newtheorem{odd and even}{Definition}
+  %\begin{odd and even}
+A natural number n is \textbf{odd} if it can be written as n = 2k+1, for some natural number k.
+A natural number n is \textbf{even} if it can be written as n = 2m, for some natural number m.\\
+%\end{odd and even}
+\end{definition}
+%\newtheorem{informal}{Theorem}
+\begin{theorem}
+  The sum of two odd numbers is even
+ \end{theorem}
+\begin{proof} Consider the odd numbers m = 2k + 1 and n = 2j + 1. Their sum can be rewritten as: (2k + 1) + (2j + 1) = 2k + 2j + 2 = 2(k + j + 1)\\
+Since k, j and 1 are all natural numbers, the right hand side of this equation is on the form $2m$ and therefore even.
+\end{proof}
 
-\newtheorem{odd and even}{Definition}
-\begin{odd and even}
-Even and odd numbers.\\
-A natural number n is \textbf{odd} if it can be written as n = 2k+1, for some natural number k.\\
-A natural number n is \textbf{even} if it can be written as n = 2y, for some natural number y.\\
-\end{odd and even}
-\newtheorem{informal}{Theorem}
-\begin{informal}
-The sum of two odd numbers is equal.\\
-Consider the odd numbers m = 2k + 1 and n = 2j + 1. Their sum can be rewritten as:\\
-(2k + 1) + (2j + 1) = 2k + 2j + 2 = 2(k + j + 1)\\
-Since k, j and 1 are all natural numbers, the right hand side of this equation is on the form $2y$ and therefore even. $\square$
-\end{informal}
+The proof is trivial and the result comes as no surprise. However, since it does not explicitly state how the conclusion is derived from the axioms, it is essentially informal. For a proof like this to be completely convincing, the reader must be able to fill in the gaps of our reasoning themselves and understand how the expressions we are using are being modified.
 
-The proof is trivial and the result comes as no surprise. However, since it does not explicitly state how the conclusion is derived from the axioms, it is essentially informal. To be satisfied with a proof like this it we are required to accept the implicit assumptions on which the reasoning is based.\\
-For example, in the step $2n_1+2n_2+2 = 2(n_1+n_2+1)$, we use the definition of addition of multiplication and the distributive property of multiplication over addition, although this is not stated. To accept that the left hand side of the equation indeed equals the right hand side we must recognize the transitivity of the equality relation. We are assumed to know how integers are defined, and accept that $n_1+n_2+1$ is an integer without proof. It is also worth noticing that the because the offered proof does not state that all integers are either odd or equal, we can not on this proof alone rule out the possibility that the resulting sum is not both odd and even. Even the fact that our proof is written in plain English could be a source of ambiguity.\\
+For example, in the step $2n_1+2n_2+2 = 2(n_1+n_2+1)$, we assume familiarity with the definition of addition and multiplication and utilize the distributive property of multiplication over addition, although this is not stated. To accept that the left-hand side of the equation indeed equals the right-hand side we must recognize the transitivity of the equality relation. We are assumed to know how integers are defined, and accept that $n_1+n_2+1$ is an integer without further motivation. Even the fact that our proof is written in plain English could be a source of ambiguity.\\
 
 Of course, the fact that this proof contains some implicit reasoning does not jeopardize its validity. The omitted steps are all trivially proven, and the proof is easy to follow. If mathematics were always to be conducted with absolute rigor and formality, it would be a very tedious process.\\
 
-Formalized mathematics is mathematical reasoning following a set of strict rules of syntax. It requires all the steps from axioms to conclusion to be presented, and is therefore very amenable for algorithmic proof checking which can be done by a computer. Much of the work in formalized mathematics is therefore done in programming languages specifically designed for this purpose.\\
+Formalized mathematics is mathematical reasoning following a set of strict rules of syntax, and is therefore very amenable for algorithmic proof checking which can be done by a computer. This is why much of the work in formalized mathematics is being done in programming languages and proof assistants specifically designed for this purpose.\\
 
 \subsection{Classical and constructive mathematics}
-When formalizing mathematics, one has to make a decision on what logical framework to use. This is a disputed topic within mathematics, with many different answers to the question of what the ``proper'' foundation of mathematical reasoning should be. Two major and opposing approaches are classical and constructive mathematics. One of the biggest disagreements between these two sides lies in in the logical axiom known as the law of the excluded middle. It states that every proposition either has to be true or false. While this is accepted in classical mathematics, constructivists claim that this is not necessarily the case for all propositions.\\
-A common example is the famous unproved mathematical statement known as Goldbach's conjecture, which states that every number can be written as the sum of odd primes. According to constructivists, since we have not explicitly constructed a proof or disproof of Goldbach's conjecture, we are not justified in asserting ``Goldbach's Conjecture is either true or false'', a statement that is regarded as true in classical mathematics. \\
-Constructivists and classical mathematicians disagree on the interpretation of ``there exists'' in a mathematical sense. This becomes very apparent when working with real numbers, since they are usually, informally, constructed as a converging cauchy sequence of rational numbers. In the classical approach to mathematics, convergence of a sequence is defined as:
-\newtheorem{conv}{Definition}
-\begin{conv}Convergence of a sequence\\
-A sequence $x$ of rational numbers $x_1, x_2, x_3, \dots$ is \textbf{convergent} if for every rational $\epsilon > 0$, there exists an integer $N$ such that for all natural numbers $m, n > N$ we have $| x_m - x_n | < \epsilon$.
-\end{conv}
-Constructivists are not satisfied with this definition, because it does not entail instructions of \textit{how} the integer N is to be chosen. Claiming that something exists must for a constructivist also be followed by an explicit construction of the object.
+When formalizing mathematics, one has to make a decision on what logical framework to use. This is a disputed topic in logic, with many different answers to the question of what the ``proper'' foundation of mathematical reasoning should be. Two major and opposing approaches are classical and constructive mathematics. These conflicting branches have a different view on the logical law of deduction known as the law of the excluded middle, which states that every proposition either has to be true or false. This is accepted in classical mathematics, but not regarded as true in constructive mathematics.
+
+A common example is the famous unproved mathematical statement known as Goldbach's conjecture, which states: \blockquote{every even integer greater than 2 can be expressed as the sum of two primes}. According to constructivists, since no proof or disproof of Goldbach's conjecture exists, we are not justified in asserting ``Goldbach's Conjecture is either true or false'', a statement that is regarded as true in classical mathematics.
+
+The difference in viewpoint between constructivists and classical mathematicians has some significant consequences for statements about real numbers. A common way of constructing a real number $x$ is by letting $x$ be a sequence of rational numbers $(x_i) = (x_0, x_1, x_2, \dots)$ where the difference between two elements $|x_m - x_n|$ becomes arbitrarily small as m and n increases.\\
+\begin{figure}[H]
+  \includegraphics[width=0.8\textwidth]{sequence}
+  \caption{A sequence $(x_i)$ of rational numbers}
+\end{figure}
+To investigate whether a real number, $x$ is positive or negative, we consider elements of the sequence $(x_i)$ and look at what value they approach as i becomes larger. For both constructivists and classical mathematicians, it is apparent that a number $x$ cannot simultaneously both be \textit{greater than or equal to} and \textit{smaller than} a given value, but what are the consequences of this? For classical mathematicians, this means that we are justified in asserting:
+
+\blockquote{For a real number, $x$, either $x \geq 0$ or $x < 0$}\\
+while constructivists maintain that we cannot make such a claim. Constructivists argue that since there is a possibility that the sequence which makes up $x$ alternates between being smaller than and greater than 0, we cannot be certain that either $x \geq 0$ or $x < 0$ holds.
 
 \subsection{Formal mathematics in Agda}\label{subsec: Agda}
-In this work, I formalize the constructive notion of real numbers as described by Errett Bishop in Constructive Analysis \cite{bishop:85} in the dependently-typed programming language of Agda. Agda is a functional programming language with a syntax similar to Haskell that essentially deals with two fundamental elements of mathematics, sets and functions. For example, here is the definition of a natural number and addition with natural numbers, $\mathbb{N}$ in Agda:\\
+In this work, I formalize the constructive notion of real numbers as described by Errett Bishop in Constructive Analysis \cite{bishop1985constructive} in the proof assistant Agda. Agda is a functional programming language with a syntax similar to Haskell that essentially deals with two fundamental elements of mathematics: sets and functions. As an example, here is the definition of a natural number and addition with natural numbers, $\mathbb{N}$ in Agda:\\
 
 \begin{code}
 data ℕ : Set where
@@ -130,9 +145,22 @@ zero  + n = n
 suc m + n = suc (m + n)
 \end{code}
 
-We see that the natural numbers is essentially a set which is created by two constructors, \texttt{zero and suc}. \texttt{suc} is short for the successor function, which given any natural number \texttt{n}, constructs the number \texttt{suc n}. \\
-The number 3 for example, is written as \texttt{suc (suc (suc (zero)))} in this way. When defining other functions on natural numbers, what we need to do is first state the type of the function (addition takes two natural numbers and outputs a natural number as an answer) and then simply match the definition of $\mathbb{N}$ and explicitly state how the output is constructed.\\
-The construction of the subsets of even and odd numbers are constructed in the same way as the informal approach, a natural number n is even if there exists ($\Sigma$ in agda) natural number k such that $k + k = n$.
+We see that the natural numbers make up a set, whose elements can be created by two constructors, \texttt{zero} and \texttt{suc}. \texttt{suc} is short for the successor function, which given any natural number \texttt{n}, constructs the number \texttt{suc n}. \\
+The number 3 for example, is written as \texttt{suc (suc (suc (zero)))} in this way. When defining functions on natural numbers, we first state the type of the function (addition takes two natural numbers and outputs a natural number as an answer) and then by matching the definition of $\mathbb{N}$ state how the output is constructed.\\
+The fundamental equality that states that the left-hand side of the equation is identical to the right-hand side is also a set in Agda, with only one constructor:
+\begin{code}
+data _≡_ {a} {A : Set a} (x : A) : A → Set a where
+   refl : x ≡ x
+\end{code}
+If we ignore the arguments given in curly brackets for now, we see that \_$\equiv$\_ is a set that can be constructed by refl if the type checker in Agda interprets the left-hand and right-hand sides of the equation as identical.
+To see how proofs are constructed in Agda, we will present a formalized version of the previously given proof that the sum of two odd numbers is even. Before we do so we need to know how to manipulate expressions using the function \texttt{cong}.
+\begin{code}
+cong : ∀ {a b} {A : Set a} {B : Set b}
+       (f : A → B) {x y} → x ≡ y → f x ≡ f y
+cong f refl = refl
+\end{code}
+Again ignoring the arguments given in curly brackets, we see that this is another way of constructing an element of the type \_$\equiv$\_ given a function f and another element of \_$\equiv$\_. In other words, given a proof that $x \equiv y$, we can use \texttt{cong} to show that $f(x) \equiv f(y)$.
+We can define odd and even numbers in Agda in the same manner as we did in the informal definition, where n is even if there exists (written as $\Sigma$ in Agda) a k, such that $n = 2k$ and n is odd if there exists a k, such that $n = 2k + 1$. The formalized version of this is as follows:
 \begin{code}
 even : ℕ -> Set
 even n = Σ ℕ (λ k -> (k + k) ≡ n)
@@ -140,14 +168,22 @@ even n = Σ ℕ (λ k -> (k + k) ≡ n)
 odd : ℕ -> Set
 odd n = Σ ℕ (λ k -> suc (k + k) ≡ n)
 \end{code}
-Before we construct the proof that the sum of two odd numbers are equal we need a couple of more lemmas. The following functions \texttt{+-assoc} and \texttt{+-comm} are proofs that addition is a commutative and associative function. \\
+Before are ready to give the proof we need a couple of more lemmas. The following functions \texttt{+-assoc} and \texttt{+-comm} are proofs that addition is a commutative and associative function. Notice how \texttt{refl} and \texttt{cong} are used below to create instances of the type \_$\equiv$\_.
 \begin{code}
 +-assoc : ∀ m n o → (m + n) + o ≡ m + (n + o)
 +-assoc zero    _ _ = refl
-+-assoc (suc m) n o = cong suc $ +-assoc m n o
++-assoc (suc m) n o = cong suc (+-assoc m n o)
+
++-right-identity : ∀ n → n + 0 ≡ n
++-right-identity zero = refl
++-right-identity (suc n) = cong suc (+-right-identity n)
+
++-suc : ∀ m n → m + suc n ≡ suc (m + n)
++-suc zero    n = refl
++-suc (suc m) n = cong suc (+-suc m n)
 
 +-comm : ∀ m n → m + n ≡ n + m
-+-comm zero    n = sym $ +-right-identity n
++-comm zero    n = sym (+-right-identity n)
 +-comm (suc m) n =
   begin
     suc m + n
@@ -159,10 +195,11 @@ Before we construct the proof that the sum of two odd numbers are equal we need 
     n + suc m
   ∎
 \end{code}
-It is worth notable that there is essentially no difference between writing a function in Agda and writing a proof. In fact, proofs are simply functions which has the statement as type, and if one can define a function that outputs the desired type, then the proof is correct.\\
-This connection between computer programs and formal logic was discovered by Haskell Curry and William Alvin Howard in the middle of the 20th century and is known as the Curry-Howard correspondence.\\
-We are now ready to prove the previously given theorem stating that the sum of two odd numbers are equal. As you can see, the idea of the proof is the same, but for every step in our reasoning we need to give a proof of how the next step follows from the previous.\\
-When comparing the following proof with the previous, informal one, we might gain an understanding of how much is taken for granted in the common, informal approach to mathematics. 
+In the last case of the last lemma, \texttt{+-comm}, we are using a method to prove equalities in Agda called equational reasoning. It is useful when multiple modifications of the left-hand side of the equation are required before getting an expression which is equal to the right. It has three components. The \texttt{begin} function simply enables the use of equational reasoning and the other two functions. The \_$\equiv\langle$ \_ $\rangle$\_ function takes three arguments, two expressions on either side and in between the angle brackets a proof that the two expressions are identical. The final $\blacksquare$ -function signifies that the proof is complete. Combined, these three functions creates an element of  \_$\equiv$\_ with the initial left-hand side and the final right-hand side of the equation as arguments.
+
+It is worth mentioning the fact that there is no difference between a function and a proof in Agda. Proofs are simply functions that has the statement that is to be proven as type, and the path from assumptions to conclusion explicitly given in the definition of the function. This connection between computer programs and formal logic was discovered by Haskell Curry and William Alvin Howard in the middle of the 20th century and is known as the Curry-Howard correspondence \cite{curry1980hb}.
+
+We are now ready to give a formalized version of the previously given proof that the sum of two odd numbers is equal. The idea of the proof is the same, but for every step in our reasoning we are required to use \texttt{cong} to modify our expression.
 \begin{code}
 o+o : {m n : ℕ} → odd n → odd m → even (n + m)
 o+o {m} {n} (j , p) (k , q) = suc (j + k) , 
@@ -186,13 +223,19 @@ o+o {m} {n} (j , p) (k , q) = suc (j + k) ,
     n + m
   ∎)
 \end{code}
-For a more thorough guide on Agda, I recommend checking out one of tutorials available on the Agda wiki at \url{http://wiki.portal.chalmers.se/agda/pmwiki.php?n=Main.Othertutorials}. The following segment of this document will assume some familiarity with the Agda programming language.
+When comparing this proof with the informal one given previously, one might gain an understanding of how much is taken for granted in the traditional, informal approach to mathematics.
+For a more thorough guide of Agda, I recommend checking out one of tutorials available on the Agda wiki at:\\
+ \url{http://wiki.portal.chalmers.se/agda/pmwiki.php?n=Main.Othertutorials}. 
+
+The remaining segment of this document will assume some familiarity with theorem proving in Agda.
 
 \section{Constructing real numbers in Agda}\label{sec: reals in agda}
-This work is an Agda implementation of the constructive definition of real numbers as given by Errett Bishop in \textit{Constructive Analysis} \cite{bishop:85} to work with the current Agda Standard Library (2.4.2). One existing module, \texttt{Data/Rational.agda} has been modified and two new modules, \texttt{Data/Rational/Properties.agda} and \texttt{Data/Real.agda} has been added.\\
-The modules are listed in their current state as attachments to this document and updated versions can be found at \url{https://github.com/MrChico/agda-stdlib} .\\
+This work is an Agda implementation of the constructive definition of real numbers as presented by Errett Bishop in \textit{Constructive Analysis} \cite{bishop1985constructive}. It works with the current Agda Standard Library (v0.9) with two modified modules, \texttt{Data/Rational.agda} and \texttt{Data/Integers/Properties.agda}. It is implemented in two new modules, \\
+\texttt{Data/Rational/Properties.agda} and \texttt{Data/Real.agda}.
+
+These four modules are listed in their current state as attachments to this document. Updated versions can in the future be found at my GitHub at:  \url{https://github.com/MrChico/agda-stdlib}.
 \subsection{Redefining rational numbers}
-The current current Agda Standard Library (2.4.2.2) contains only a small module Data.Rational in which rational numbers are defined, but lacks the necessary functions to define real numbers. Therefore I have used the contributions made by the GitHub user sabry at (\url{https://github.com/sabry/agda-stdlib/blob/master/src/Data/Rational.agda}) as a starting point. \\
+The current current Agda Standard Library (v0.9) contains only a small module \texttt{Data.Rational} in which rational numbers are defined, but lacks the necessary functions to define real numbers. Therefore I have used the contributions made by the GitHub user sabry at (\url{https://github.com/sabry/agda-stdlib/blob/master/src/Data/Rational.agda}) as a springboard for this work. \\
 I have made a significant change to the definition of a rational number by not requiring the numerator and denominator to be coprime. While working with rationals it became apparent that requiring coprimality made theorem proving highly demanding, both for human effort and computer power. Therefore, instead of:
 \begin{code}
 record ℚ : Set where
@@ -201,7 +244,7 @@ record ℚ : Set where
     denominator-1 : ℕ
     isCoprime     : True (C.coprime? ∣ numerator ∣ (suc denominator-1))
 \end{code}
-We will simply write:
+we simply write:
 \begin{code}
 record ℚ : Set where
   constructor _÷suc_
@@ -216,15 +259,49 @@ p ≃ q = numerator p ℤ.* (+ suc (denominator-1 q)) ≡
         numerator q ℤ.* (+ suc (denominator-1 p))
   where open ℚ
 \end{code}
-Since we can have several elements in the same equivalence class, this relation is no longer synonomous with the identically equal relation, $\equiv$. This makes us unable to modify expressions with functions like cong and subst, and instead we have to show that the functions we define on rationals preserve the equivalence relation.\\
+Since we can have several elements in the same equivalence class, this relation is no longer synonymous with the identically equal relation, $\equiv$. This makes us unable to modify expressions with functions like cong and subst, and instead we have to show that the functions we define on rationals preserve the equivalence relation.
+
 It is also worth mentioning that we would rarely require rational numbers to be given on their coprime form in informal mathematics. The new definition makes working with rational numbers closer to how one might work with rational numbers using pen and paper. Compare the formal definitions with Bishop's definition of a rational number:\\
 \blockquote{
 For us, a \textit{rational number} will be an expression of the form \textit{p/q} where $p$ and $q$ are integers with $q\neq0$.
 }\\
-What still differs between the two definitions is the fact that Bishop allows negative numbers in the denominator, whereas we do not. This minor change does not have any significant impact in working with rational numbers, and is only for convenience. We can more easily convenient to construct rational numbers in Agda by just allowing natural numbers larger than zero as denominators.\\
-Several lemmas used in the module \texttt{Data/Real.agda} can be found in the new module \texttt{Data/Rational.agda}
+What still differs between the two definitions is the fact that Bishop allows negative numbers in the denominator, whereas we do not. This minor change does not have any significant impact on how we work with rational numbers, and is only for convenience. Constructing rational numbers in Agda by just allowing natural numbers larger than zero as denominators makes our definition slightly nicer.
+
+With the new definition, the proof that \_≃\_ is an equivalence relation on rational numbers had to be rewritten. It is listed below:
+\begin{code}
+--This is an equivalence relation
+isEquivalence : IsEquivalence _≃_
+isEquivalence = record {
+  refl = refl ;
+  sym = P.sym ;
+  trans = λ {a}{b}{c} -> trans {a}{b}{c}
+  }
+    where
+    trans : Transitive _≃_
+    trans {a ÷suc b} {f ÷suc g} {x ÷suc y} ag≃fb fy≃xg = 
+      cancel-*-right (a ℤ.* (+ suc y)) (x ℤ.* (+ suc b)) (+ suc g) (λ {()}) 
+        (P.trans ayg≃fby fby≃xbg)
+      where
+        agy≃fby : (a ℤ.* + suc g ℤ.* + suc y ≡ f ℤ.* + suc b ℤ.* + suc y)
+        agy≃fby = cong (λ j -> (j ℤ.* + suc y)) (ag≃fb)
+        ayg≃fby : (a ℤ.* + suc y ℤ.* + suc g ≡ f ℤ.* + suc b ℤ.* + suc y)
+        ayg≃fby = P.trans (*-assoc a (+ suc y) (+ suc g)) 
+          (P.trans (cong (λ j -> (a ℤ.* j )) (*-comm (+ suc y) (+ suc g))) 
+            (P.trans (P.sym (*-assoc a (+ suc g) (+ suc y))) agy≃fby))
+        fyb≃xgb : (f ℤ.* + suc y ℤ.* + suc b ≡ x ℤ.* + suc g ℤ.* + suc b)
+        fyb≃xgb = cong (λ j -> j ℤ.* (+ suc b)) fy≃xg
+        fby≃xgb : (f ℤ.* + suc b ℤ.* + suc y ≡ x ℤ.* + suc g ℤ.* + suc b)
+        fby≃xgb = P.trans (*-assoc f (+ suc b) (+ suc y)) 
+          (P.trans (cong (λ j -> (f ℤ.* j )) (*-comm (+ suc b) (+ suc y))) 
+            (P.trans (P.sym (*-assoc f (+ suc y) (+ suc b))) fyb≃xgb))
+        fby≃xbg : (f ℤ.* + suc b ℤ.* + suc y ≡ x ℤ.* + suc b ℤ.* + suc g)
+        fby≃xbg = P.trans (P.trans (fby≃xgb) (*-assoc x (+ suc g) (+ suc b))) 
+          (P.trans (cong (λ j -> (x ℤ.* j)) (*-comm (+ suc g) (+ suc b))) 
+            (P.sym (*-assoc x (+ suc b) (+ suc g))))
+\end{code}
+A minor change also had to be made to show that the rational numbers are a totally ordered set with decidable equality. Compare the version of \texttt{Data/Rational.agda} found in the attachments of this document with the version in the Agda Standard Library (v0.9) for details.
 \subsection{Definition and equivalence of real numbers}
-The definition of a real number is almost identical to the definition given by Bishop, with one minor modification. Where Bishop describes a sequence as a mapping of the stricly positive integers to rationals, we will define it as a mapping from the natural numbers to rationals. This makes things a bit nicer. Where Bishop writes:
+The definition of a real number is almost identical to the definition given by Bishop, with one minor modification. Where Bishop describes a sequence as a mapping of the strictly positive integers to rationals, we will define it as a mapping from the natural numbers to rationals. This makes things a bit nicer. Where Bishop writes:
 \blockquote{
 A sequence of rational numbers is \textit{regular} if 
 $$| x_m - x_n | \leq m^{-1} + n^{-1} (m, n \in \mathbb{Z}^*)$$
@@ -238,7 +315,7 @@ record ℝ : Set where
   constructor Real
   field
     f : ℕ -> ℚ
-    reg : {n m : ℕ} -> ∣ f n ℚ.- f m ∣ ℚ.≤ (suc n)⁻¹ ℚ.+ (suc n)⁻¹
+    reg : {n m : ℕ} -> ∣ f n ℚ.- f m ∣ ℚ.≤ (suc m)⁻¹ ℚ.+ (suc n)⁻¹
 \end{code}
 Following Bishop, we then define an equivalence relation by:
 \begin{code}
@@ -248,79 +325,89 @@ infix 4 _≃_
 _≃_ : Rel ℝ Level.zero
 x ≃ y =  {n : ℕ} -> ∣ ℝ.f x n - ℝ.f y n ∣ ≤ (suc n)⁻¹ ℚ.+ (suc n)⁻¹
 \end{code}
-Equality looks very similar to regularity of a sequence, which makes sense. The difference between two rational numbers of the sequence given the same argument can become arbritrarily small as n increases.\\
+Equality looks very similar to regularity of a sequence, which makes sense. The difference between two rational numbers of the sequence becomes arbitrarily small as n increases.\\
 To prove that the relation ≃ defines an equivalence relation on the real numbers we must show that it satisfies three conditions:
 \begin{enumerate}
 \item \textbf{Reflexivity} $x ≃ x$ for all $x \in \mathbb{R}$
 \item \textbf{Symmetry} If $x ≃ y$ then $y ≃ x$ for all $x, y \in \mathbb{R}$
 \item \textbf{Transitivity} If $x ≃ y$ and $y ≃ z$ then $x ≃ z$ for all $x, y, z \in \mathbb{R}$
 \end{enumerate}
-Reflexivity is easy enough to show, all we have to do is give the proof that the sequence defining x converges:
+Reflexivity is easy to show, all we have to do is to give the proof that the sequence defining x converges:
 \begin{code}
 --reflexitivity
 refl≃ : {x : ℝ} -> (x ≃ x)
 refl≃ {x} = ℝ.reg x
 \end{code}
-Symmetry seems like an easy task as well. Informally, all we need to show is that $| x_n - y_n | = | y_n - x_n|$. But showing this formally is a bit more cumbersome. The strategy is as follows: first we show that $- (a - b) = b - a$ for all rational numbers a and b and then that $| - c | = | c |$ for a rational number c. To show the first part, we must first show that the statement is true for integers.\\
+Symmetry seems like an easy task as well. Informally, all we need to show is that $| x_n - y_n | = | y_n - x_n|$. But showing this formally requires a bit of work. The strategy is as follows: first we show that $- (a - b) = b - a$ for all rational numbers a and b and then that $| - c | = | c |$ for a rational number c. A corresponding proof for integers is also added to the module \texttt{Data/Integers/Properties}.\\
 Here are the lemmas needed to show symmetry of the equivalence relation (found in \texttt{Data/Rational/Properties.agda}):
 \begin{code}
---Lemmas helping to show symmetry of the equivalence relation
- defined on the real numbers
+-swap : (x y : ℚ) -> (- (y - x) ≡ x - y)
+-swap (-[1+ n₁ ] ÷suc d₁) (-[1+ n₂ ] ÷suc d₂) = 
+  cong₂ (λ a b -> (a ÷suc (pred b))) 
+  (ℤ-swap (-[1+ n₂ ] ℤ.* + suc d₁) (-[1+ n₁ ] ℤ.* + suc d₂)) 
+  (*-comm (suc d₂) (suc d₁))
+-swap (-[1+ n₁ ] ÷suc d₁) ((+ zero) ÷suc d₂) = 
+  cong (λ a -> (-[1+ n₁ ] ℤ.* (+ suc d₂)) ℚ.÷suc (pred a))
+  (*-comm (suc d₂) (suc d₁))
+-swap (-[1+ n₁ ] ÷suc d₁) ((+ suc n₂) ÷suc d₂) = 
+  cong₂ (λ a b -> (a ÷suc (pred b))) 
+  (ℤ-swap (+ suc n₂ ℤ.* + suc d₁) (-[1+ n₁ ] ℤ.* + suc d₂)) 
+  (*-comm (suc d₂) (suc d₁))
+-swap ((+ zero) ÷suc d₁) (-[1+ n₂ ] ÷suc d₂) = 
+  cong₂ (λ a b -> (a ÷suc (pred b))) 
+  (ℤ-swap (-[1+ n₂ ] ℤ.* + suc d₁) (+ zero ℤ.* + suc d₂)) 
+  (*-comm (suc d₂) (suc d₁))
+-swap ((+ suc n₁) ÷suc d₁) (-[1+ n₂ ] ÷suc d₂) = 
+  cong₂ (λ a b -> (a ÷suc (pred b))) 
+  (ℤ-swap (-[1+ n₂ ] ℤ.* + suc d₁) (+ suc n₁ ℤ.* + suc d₂)) 
+  (*-comm (suc d₂) (suc d₁))
+-swap ((+ zero) ÷suc d₁) ((+ zero) ÷suc d₂) = 
+  cong (λ a -> ((+ zero) ÷suc (pred a)))
+  (*-comm (suc d₂) (suc d₁))
+-swap ((+ zero) ÷suc d₁) ((+ suc n₂) ÷suc d₂) = 
+  cong₂ (λ a b -> (a ÷suc (pred b))) 
+  (ℤ-swap (+ suc n₂ ℤ.* + suc d₁) (+ zero ℤ.* + suc d₂)) 
+  (*-comm (suc d₂) (suc d₁))
+-swap ((+ suc n) ÷suc d₁) ((+ zero) ÷suc d₂) = 
+  cong₂ (λ a b -> (a ÷suc (pred b))) 
+  (ℤ-swap (+ zero ℤ.* + suc d₁) (+ suc n ℤ.* + suc d₂)) 
+  (*-comm (suc d₂) (suc d₁))
+-swap ((+ suc n₁) ÷suc d₁) ((+ suc n₂) ÷suc d₂) = 
+  cong₂ (λ a b -> (a ÷suc (pred b))) 
+  (ℤ-swap (+ suc n₂ ℤ.* + suc d₁) (+ suc n₁ ℤ.* + suc d₂)) 
+  (*-comm (suc d₂) (suc d₁))
 
-⊖-swap : ∀ a b → a ℤ.⊖ b ≡ ℤ.- (b ℤ.⊖ a)
-⊖-swap zero    zero    = refl
-⊖-swap (suc _) zero    = refl
-⊖-swap zero    (suc _) = refl
-⊖-swap (suc a) (suc b) = ⊖-swap a b
-
-ℤ-swap : (a b : ℤ) -> (ℤ.- (a ℤ.- b) ≡ b ℤ.- a)
-ℤ-swap -[1+ n ] -[1+ n₁ ] = P.sym (⊖-swap n n₁)
-ℤ-swap -[1+ n ] (+ zero) = refl
-ℤ-swap -[1+ n ] (+ suc n₁) = trans (cong (λ a -> + suc (suc a)) 
-   (+-comm n n₁)) (cong (λ a -> + a) (P.sym (+-suc (suc n₁) n)))
-ℤ-swap (+ zero) -[1+ n₁ ] = refl
-ℤ-swap (+ suc n) -[1+ n₁ ] = cong (λ a -> -[1+ a ]) (+-comm n (suc n₁))
-ℤ-swap (+ zero) (+ zero) = refl
-ℤ-swap (+ zero) (+ suc n₁) = cong (λ a -> + a) (P.sym (+-right-identity (suc n₁)))
-ℤ-swap (+ suc n) (+ zero) = cong (λ a -> -[1+ a ]) (+-right-identity n)
-ℤ-swap (+ suc n) (+ suc n₁) = P.sym (⊖-swap n₁ n)
-
-ℚ-swap : (x y : ℚ) -> (- (y - x) ≡ x - y)
-ℚ-swap (-[1+ n₁ ] ÷suc d₁) (-[1+ n₂ ] ÷suc d₂) = cong₂ (λ a b -> (a ÷suc (pred b))) (ℤ-swap (-[1+ n₂ ] ℤ.* + suc d₁) (-[1+ n₁ ] ℤ.* + suc d₂)) (*-comm (suc d₂) (suc d₁))
-ℚ-swap (-[1+ n₁ ] ÷suc d₁) ((+ zero) ÷suc d₂) = cong (λ a -> (-[1+ n₁ ] ℤ.* (+ suc d₂)) ℚ.÷suc (pred a))(*-comm (suc d₂) (suc d₁))
-ℚ-swap (-[1+ n₁ ] ÷suc d₁) ((+ suc n₂) ÷suc d₂) = cong₂ (λ a b -> (a ÷suc (pred b))) (ℤ-swap (+ suc n₂ ℤ.* + suc d₁) (-[1+ n₁ ] ℤ.* + suc d₂)) (*-comm (suc d₂) (suc d₁))
-ℚ-swap ((+ zero) ÷suc d₁) (-[1+ n₂ ] ÷suc d₂) = cong₂ (λ a b -> (a ÷suc (pred b))) (ℤ-swap (-[1+ n₂ ] ℤ.* + suc d₁) (+ zero ℤ.* + suc d₂)) (*-comm (suc d₂) (suc d₁))
-ℚ-swap ((+ suc n₁) ÷suc d₁) (-[1+ n₂ ] ÷suc d₂) = cong₂ (λ a b -> (a ÷suc (pred b))) (ℤ-swap (-[1+ n₂ ] ℤ.* + suc d₁) (+ suc n₁ ℤ.* + suc d₂)) (*-comm (suc d₂) (suc d₁))
-ℚ-swap ((+ zero) ÷suc d₁) ((+ zero) ÷suc d₂) = cong (λ a -> ((+ zero) ÷suc (pred a)))(*-comm (suc d₂) (suc d₁))
-ℚ-swap ((+ zero) ÷suc d₁) ((+ suc n₂) ÷suc d₂) = cong₂ (λ a b -> (a ÷suc (pred b))) (ℤ-swap (+ suc n₂ ℤ.* + suc d₁) (+ zero ℤ.* + suc d₂)) (*-comm (suc d₂) (suc d₁))
-ℚ-swap ((+ suc n) ÷suc d₁) ((+ zero) ÷suc d₂) = cong₂ (λ a b -> (a ÷suc (pred b))) (ℤ-swap (+ zero ℤ.* + suc d₁) (+ suc n ℤ.* + suc d₂)) (*-comm (suc d₂) (suc d₁))
-ℚ-swap ((+ suc n₁) ÷suc d₁) ((+ suc n₂) ÷suc d₂) = cong₂ (λ a b -> (a ÷suc (pred b))) (ℤ-swap (+ suc n₂ ℤ.* + suc d₁) (+ suc n₁ ℤ.* + suc d₂)) (*-comm (suc d₂) (suc d₁))
-
-ℚabs₁ : (x : ℚ) -> (∣ ℚ.- x ∣ ≡ ∣ x ∣)
+ℚabs₁ : (x : ℚ) -> (∣ - x ∣ ≡ ∣ x ∣)
 ℚabs₁ (-[1+ n ] ÷suc d₁) = refl
 ℚabs₁ ((+ zero) ÷suc d₁) = refl
 ℚabs₁ ((+ suc n) ÷suc d₁) = refl
 
 ℚabs₂ : (x y : ℚ) -> (∣ x - y ∣ ≡ ∣ y - x ∣)
-ℚabs₂ x y = trans (cong ∣_∣ (P.sym (ℚ-swap x y) ))(ℚabs₁ (y - x))
+ℚabs₂ x y = trans (cong ∣_∣ (P.sym (-swap x y) ))(ℚabs₁ (y - x))
 \end{code}
-Our proof that the relation ≃ on real numbers is symmetric can now simply be given by substituting \texttt{| ℝ.f x n - ℝ.f y n |} for \texttt{| ℝ.f y n - ℝ.f x n |}. x≃y is a variable which has x ≃ y as type, which given a natural number n (as implicit argument) it will give the relation \texttt{∣ ℝ.f x n - ℝ.f y n ∣ ≤ (suc n)⁻¹ ℚ.+ (suc n)⁻¹}.
+Our proof that the relation ≃ on real numbers is symmetric can now simply be given by substituting \texttt{| ℝ.f x n - ℝ.f y n |} for \texttt{| ℝ.f y n - ℝ.f x n |}. x≃y below is a variable which has x ≃ y as type, which given a natural number n (as implicit argument) it will give the relation \texttt{∣ ℝ.f x n - ℝ.f y n ∣ ≤ (suc n)⁻¹ ℚ.+ (suc n)⁻¹}.
 \begin{code}
   --symmetry
   sym≃ : {x y : ℝ} -> (x ≃ y -> y ≃ x)
-  sym≃ {x}{y} x≃y = λ {n} -> (subst (λ a -> a ≤ (suc n)⁻¹ ℚ.+ (suc n)⁻¹) (ℚabs₂ (ℝ.f x n) (ℝ.f y n))) (x≃y {n})
+  sym≃ {x}{y} x≃y = λ {n} -> 
+    subst (λ a -> a ≤ (suc n)⁻¹ ℚ.+ (suc n)⁻¹) 
+    (ℚabs₂ (ℝ.f x n) (ℝ.f y n)) (x≃y {n})
 \end{code}
-Showing transitivity is a bit more of a challenge. Luckily, Bishop gives us a hint. (Lemma 2.3 in \textit{Constructive analysis} \cite{bishop:85})
+Showing transitivity is a bit more of a challenge. Luckily, Bishop gives us a hint.
 \blockquote{
 (2.3) \textbf{Lemma.} The real numbers $x\equiv(x_n)$ and $y\equiv(y_n)$ are equal if and only if for each positive integer $j$ there exists a positive integer $N_j$ such that
 $$|x_n - y_n| \leq j^{-1} \quad (n \geq N_j)$$
 }
-I have not yet proved the formal version of this lemma its definition is as follows:
+\cite{bishop1985constructive}\\
+I have not yet proved the formal version of this lemma, but the definition is as follows:
 \begin{code}
-postulate Bishopslem : {x y : ℝ} -> ({j : ℕ} -> Σ ℕ λ Nⱼ -> ({m : ℕ} -> ∣ ℝ.f x (Nⱼ ℕ.+ m) - ℝ.f y (Nⱼ ℕ.+ m) ∣ ≤ (suc j)⁻¹)) → (x ≃ y)
+postulate Bishopslem : {x y : ℝ} -> 
+           ({j : ℕ} -> ∃ λ Nⱼ -> ({m : ℕ} -> 
+           ∣ ℝ.f x (Nⱼ ℕ.+ m) - ℝ.f y (Nⱼ ℕ.+ m) ∣ ≤ (suc j)⁻¹)) 
+           -> (x ≃ y)
 \end{code}
-Note that if we set the n in Bishops definition to $n = Nⱼ ℕ.+ m$, the two definitions are equivalent.
-Using this lemma we can make a strategy of how to solve transitivity. The proof idea is this:\\
+Note that here we write the all the natural numbers larger than $N_j$ in as $N_j + m$, for any natural number m, instead of as $n$ in Bishop's version.
+Using this lemma we can make a strategy of how to prove transitivity. The idea is this:\\
 We can use the triangle inequality to show that the relation
 \begin{code}
 | ℝ.f x n - ℝ.f z n | ≤ 
@@ -330,30 +417,63 @@ is true for all natural numbers n. Then, if we know that \\
 \texttt{| ℝ.f x n - ℝ.f y n | ≤ (suc n)⁻¹ + (suc n)⁻¹} and \\
 \texttt{| ℝ.f y n - ℝ.f z n | ≤ (suc n)⁻¹ + (suc n)⁻¹} for all natural numbers n, we can choose a $N_j$ given any $j$ such that the relation\\
 \texttt{(suc n)⁻¹ + (suc n)⁻¹ + (suc n)⁻¹ + (suc n)⁻¹ ≤ (suc j)⁻¹}\\
-is true for all $n \geq N_j$. We see that if we chose $N_j = 4j + 4$ we see that
+is true for all $n \geq N_j$. We see that if we choose $N_j = 4j + 4$ we see that
 $$\frac{1}{4j + 4}+\frac{1}{4j + 4}+\frac{1}{4j + 4}+\frac{1}{4j + 4}=\frac{4}{4j+4}=\frac{1}{j + 1}$$ and that the relation will hold for all $n$ greater than $N_j$
-To formalize this proof we will need a couple of additional lemmas. First, we need to show that addition with rational numbers preserves the equivalence relation on rationals as defined previously. This is the proof listed as +-exist below. It looks quite substantial, but we are mostly only changing the order in which things are multiplied together.
+To formalize this proof we will need a couple of additional lemmas. First, we need to show that addition with rational numbers preserves the previously defined equivalence relation on rationals. This is the function named +-exist below. It looks quite substantial, but the proof mostly involves changing the order in which things are multiplied.
 \begin{code}
---Since the rationals are defined without a requirement of coprimality, our equivalence relation on rational numbers, ≈, is not synonymous with ≡ and therefore we cannot use subst or cong to modify expressions. Instead, we have to show for every function defined on rationals that it preserves the equality relation.
+--Since the we have defined rationals without requiring coprimality, 
+--our equivalence relation ≈ is not synonymous with ≡ and therefore 
+--we cannot use subst or cong to modify expressions. 
+--Instead, we have to show that every function defined on rationals 
+--preserves the equality relation.
 +-exist :  _+_ Preserves₂ _≃_ ⟶ _≃_ ⟶ _≃_
 +-exist {p}{q}{x}{y} pq xy =  begin 
-        (pn ℤ.* xd ℤ.+ xn ℤ.* pd) ℤ.* (qd ℤ.* yd) ≡⟨ proj₂ ℤdistrib (qd ℤ.* yd) (pn ℤ.* xd) (xn ℤ.* pd)   ⟩
-        pn ℤ.* xd ℤ.* (qd ℤ.* yd) ℤ.+ xn ℤ.* pd ℤ.* (qd ℤ.* yd) ≡⟨ cong₂ ℤ._+_ (ℤ*-assoc pn xd (qd ℤ.* yd)) (ℤ*-assoc xn pd (qd ℤ.* yd)) ⟩
-        pn ℤ.* (xd ℤ.* (qd ℤ.* yd)) ℤ.+ xn ℤ.* (pd ℤ.* (qd ℤ.* yd)) ≡⟨ cong₂ (λ a b -> pn ℤ.* a ℤ.+ xn ℤ.* (pd ℤ.* b)) (P.sym (ℤ*-assoc xd qd yd)) (ℤ*-comm qd yd) ⟩
-        pn ℤ.* (xd ℤ.* qd ℤ.* yd) ℤ.+ xn ℤ.* (pd ℤ.* (yd ℤ.* qd)) ≡⟨ cong₂ (λ a b -> pn ℤ.* (a ℤ.* yd) ℤ.+ xn ℤ.* b) (ℤ*-comm xd qd) (P.sym (ℤ*-assoc pd yd qd)) ⟩
-        pn ℤ.* (qd ℤ.* xd ℤ.* yd) ℤ.+ xn ℤ.* (pd ℤ.* yd ℤ.* qd) ≡⟨ cong₂ (λ a b -> pn ℤ.* a ℤ.+ xn ℤ.* (b ℤ.* qd)) (ℤ*-assoc qd xd yd) (ℤ*-comm pd yd) ⟩
-        pn ℤ.* (qd ℤ.* (xd ℤ.* yd)) ℤ.+ xn ℤ.* (yd ℤ.* pd ℤ.* qd) ≡⟨ cong₂ (λ a b -> a ℤ.+ xn ℤ.* b) (P.sym (ℤ*-assoc pn qd (xd ℤ.* yd))) (ℤ*-assoc yd pd qd) ⟩
-        pn ℤ.* qd ℤ.* (xd ℤ.* yd) ℤ.+ xn ℤ.* (yd ℤ.* (pd ℤ.* qd)) ≡⟨ cong₂ (λ a b -> a ℤ.* (xd ℤ.* yd) ℤ.+ b) pq  ((P.sym (ℤ*-assoc xn yd (pd ℤ.* qd)))) ⟩
-        qn ℤ.* pd ℤ.* (xd ℤ.* yd) ℤ.+ xn ℤ.* yd ℤ.* (pd ℤ.* qd) ≡⟨ cong₂ (λ a b -> a ℤ.+ b ℤ.* (pd ℤ.* qd)) (ℤ*-assoc qn pd (xd ℤ.* yd)) xy ⟩
-        qn ℤ.* (pd ℤ.* (xd ℤ.* yd)) ℤ.+ yn ℤ.* xd ℤ.* (pd ℤ.* qd) ≡⟨ cong₂ (λ a b -> qn ℤ.* (pd ℤ.* a) ℤ.+ yn ℤ.* xd ℤ.* b) (ℤ*-comm xd yd) (ℤ*-comm pd qd) ⟩
-        qn ℤ.* (pd ℤ.* (yd ℤ.* xd)) ℤ.+ yn ℤ.* xd ℤ.* (qd ℤ.* pd) ≡⟨ cong₂ (λ a b -> qn ℤ.* a ℤ.+ b) (P.sym (ℤ*-assoc pd yd xd )) (ℤ*-assoc yn xd (qd ℤ.* pd)) ⟩
-        qn ℤ.* (pd ℤ.* yd ℤ.* xd) ℤ.+ yn ℤ.* (xd ℤ.* (qd ℤ.* pd)) ≡⟨ cong₂ (λ a b -> qn ℤ.* (a ℤ.* xd) ℤ.+ yn ℤ.* b) (ℤ*-comm pd yd) (P.sym (ℤ*-assoc xd qd pd )) ⟩
-        qn ℤ.* (yd ℤ.* pd ℤ.* xd) ℤ.+ yn ℤ.* (xd ℤ.* qd ℤ.* pd) ≡⟨ cong₂ (λ a b -> qn ℤ.* a ℤ.+ yn ℤ.* (b ℤ.* pd)) (ℤ*-assoc yd pd xd) (ℤ*-comm xd qd) ⟩
-        qn ℤ.* (yd ℤ.* (pd ℤ.* xd)) ℤ.+ yn ℤ.* (qd ℤ.* xd ℤ.* pd) ≡⟨ cong₂ (λ a b -> a ℤ.+ yn ℤ.* b) (P.sym (ℤ*-assoc qn yd (pd ℤ.* xd))) (ℤ*-assoc qd xd pd) ⟩
-        qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* (qd ℤ.* (xd ℤ.* pd)) ≡⟨ cong (λ a -> qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* (qd ℤ.* a)) (ℤ*-comm xd pd) ⟩
-        qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* (qd ℤ.* (pd ℤ.* xd)) ≡⟨ cong (λ a -> qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ a) (P.sym (ℤ*-assoc yn qd (pd ℤ.* xd))) ⟩
-        qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* qd ℤ.* (pd ℤ.* xd) ≡⟨ P.sym (proj₂ ℤdistrib (pd ℤ.* xd) (qn ℤ.* yd) (yn ℤ.* qd)) ⟩
-        (qn ℤ.* yd ℤ.+ yn ℤ.* qd) ℤ.* (pd ℤ.* xd)
+  (pn ℤ.* xd ℤ.+ xn ℤ.* pd) ℤ.* (qd ℤ.* yd) 
+  ≡⟨ proj₂ ℤdistrib (qd ℤ.* yd) (pn ℤ.* xd) (xn ℤ.* pd)   ⟩
+  pn ℤ.* xd ℤ.* (qd ℤ.* yd) ℤ.+ xn ℤ.* pd ℤ.* (qd ℤ.* yd) 
+  ≡⟨ cong₂ ℤ._+_ (ℤ*-assoc pn xd (qd ℤ.* yd)) (ℤ*-assoc xn pd (qd ℤ.* yd)) ⟩
+  pn ℤ.* (xd ℤ.* (qd ℤ.* yd)) ℤ.+ xn ℤ.* (pd ℤ.* (qd ℤ.* yd)) 
+  ≡⟨ cong₂ (λ a b -> pn ℤ.* a ℤ.+ xn ℤ.* (pd ℤ.* b)) 
+    (P.sym (ℤ*-assoc xd qd yd)) (ℤ*-comm qd yd) ⟩
+  pn ℤ.* (xd ℤ.* qd ℤ.* yd) ℤ.+ xn ℤ.* (pd ℤ.* (yd ℤ.* qd)) 
+  ≡⟨ cong₂ (λ a b -> pn ℤ.* (a ℤ.* yd) ℤ.+ xn ℤ.* b) 
+    (ℤ*-comm xd qd) (P.sym (ℤ*-assoc pd yd qd)) ⟩
+  pn ℤ.* (qd ℤ.* xd ℤ.* yd) ℤ.+ xn ℤ.* (pd ℤ.* yd ℤ.* qd) 
+  ≡⟨ cong₂ (λ a b -> pn ℤ.* a ℤ.+ xn ℤ.* (b ℤ.* qd)) 
+    (ℤ*-assoc qd xd yd) (ℤ*-comm pd yd) ⟩
+  pn ℤ.* (qd ℤ.* (xd ℤ.* yd)) ℤ.+ xn ℤ.* (yd ℤ.* pd ℤ.* qd) 
+  ≡⟨ cong₂ (λ a b -> a ℤ.+ xn ℤ.* b) 
+    (P.sym (ℤ*-assoc pn qd (xd ℤ.* yd))) (ℤ*-assoc yd pd qd) ⟩
+  pn ℤ.* qd ℤ.* (xd ℤ.* yd) ℤ.+ xn ℤ.* (yd ℤ.* (pd ℤ.* qd)) 
+  ≡⟨ cong₂ (λ a b -> a ℤ.* (xd ℤ.* yd) ℤ.+ b) pq  
+    (P.sym (ℤ*-assoc xn yd (pd ℤ.* qd))) ⟩
+  qn ℤ.* pd ℤ.* (xd ℤ.* yd) ℤ.+ xn ℤ.* yd ℤ.* (pd ℤ.* qd) 
+  ≡⟨ cong₂ (λ a b -> a ℤ.+ b ℤ.* (pd ℤ.* qd)) 
+    (ℤ*-assoc qn pd (xd ℤ.* yd)) xy ⟩
+  qn ℤ.* (pd ℤ.* (xd ℤ.* yd)) ℤ.+ yn ℤ.* xd ℤ.* (pd ℤ.* qd) 
+  ≡⟨ cong₂ (λ a b -> qn ℤ.* (pd ℤ.* a) ℤ.+ yn ℤ.* xd ℤ.* b) 
+    (ℤ*-comm xd yd) (ℤ*-comm pd qd) ⟩
+  qn ℤ.* (pd ℤ.* (yd ℤ.* xd)) ℤ.+ yn ℤ.* xd ℤ.* (qd ℤ.* pd) 
+  ≡⟨ cong₂ (λ a b -> qn ℤ.* a ℤ.+ b) 
+    (P.sym (ℤ*-assoc pd yd xd )) (ℤ*-assoc yn xd (qd ℤ.* pd)) ⟩
+  qn ℤ.* (pd ℤ.* yd ℤ.* xd) ℤ.+ yn ℤ.* (xd ℤ.* (qd ℤ.* pd)) 
+  ≡⟨ cong₂ (λ a b -> qn ℤ.* (a ℤ.* xd) ℤ.+ yn ℤ.* b) 
+    (ℤ*-comm pd yd) (P.sym (ℤ*-assoc xd qd pd )) ⟩
+  qn ℤ.* (yd ℤ.* pd ℤ.* xd) ℤ.+ yn ℤ.* (xd ℤ.* qd ℤ.* pd) 
+  ≡⟨ cong₂ (λ a b -> qn ℤ.* a ℤ.+ yn ℤ.* (b ℤ.* pd)) 
+    (ℤ*-assoc yd pd xd) (ℤ*-comm xd qd) ⟩
+  qn ℤ.* (yd ℤ.* (pd ℤ.* xd)) ℤ.+ yn ℤ.* (qd ℤ.* xd ℤ.* pd) 
+  ≡⟨ cong₂ (λ a b -> a ℤ.+ yn ℤ.* b) 
+    (P.sym (ℤ*-assoc qn yd (pd ℤ.* xd))) (ℤ*-assoc qd xd pd) ⟩
+  qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* (qd ℤ.* (xd ℤ.* pd)) 
+  ≡⟨ cong (λ a -> qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* (qd ℤ.* a)) 
+    (ℤ*-comm xd pd) ⟩
+  qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* (qd ℤ.* (pd ℤ.* xd)) 
+  ≡⟨ cong (λ a -> qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ a) 
+    (P.sym (ℤ*-assoc yn qd (pd ℤ.* xd))) ⟩
+  qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* qd ℤ.* (pd ℤ.* xd) 
+  ≡⟨ P.sym (proj₂ ℤdistrib (pd ℤ.* xd) (qn ℤ.* yd) (yn ℤ.* qd)) ⟩
+  (qn ℤ.* yd ℤ.+ yn ℤ.* qd) ℤ.* (pd ℤ.* xd)
         ∎
          where
            open P.≡-Reasoning
@@ -368,25 +488,42 @@ To formalize this proof we will need a couple of additional lemmas. First, we ne
 \end{code}
 We also want to be able to reduce the sum of four rationals $\frac{1}{4j + j} + \frac{1}{4j + j} + \frac{1}{4j + j} + \frac{1}{4j + j} = \frac{1}{j +1}$ as described in the proof idea above. For that we need the following lemmas.
 \begin{code}
-+-red₁ : (n : ℕ) -> ((+ 1) ÷suc (suc (n ℕ.+ n)) ℚ.+ (+ 1) ÷suc (suc (n ℕ.+ n)) ℚ.≃ (+ 1) ÷suc n)
++-red₁ : (n : ℕ) -> 
+  ((+ 1) ÷suc (suc (n ℕ.+ n)) ℚ.+ 
+  (+ 1) ÷suc (suc (n ℕ.+ n)) ℚ.≃ (+ 1) ÷suc n)
 +-red₁ n = begin 
-      ((+ 1) ℤ.* k ℤ.+ (+ 1) ℤ.* k) ℤ.* + suc n ≡⟨ cong (λ a -> ((a ℤ.+ a) ℤ.* + suc n)) (proj₁ ℤ*-identity k) ⟩
-      (k ℤ.+ k) ℤ.* + suc n ≡⟨ cong (λ a -> a ℤ.* + suc n) (P.sym (lem k)) ⟩
-      (+ 2) ℤ.* k ℤ.* (+ suc n) ≡⟨ cong (λ a -> a ℤ.* + suc n) (ℤ*-comm (+ 2) k) ⟩
-      k ℤ.* (+ 2) ℤ.* (+ suc n) ≡⟨ ℤ*-assoc k (+ 2) (+ suc n) ⟩
-      k ℤ.* ((+ 2) ℤ.* (+ suc n)) ≡⟨ cong (λ a -> k ℤ.* a) (lem (+ suc n)) ⟩
-      k ℤ.* (+ suc (n ℕ.+ suc n)) ≡⟨ cong (λ a -> k ℤ.* + suc a) (+-comm n (suc n)) ⟩
-      k ℤ.* k ≡⟨ P.sym (proj₁ ℤ*-identity (k ℤ.* k)) ⟩
-      (+ 1) ℤ.* (k ℤ.* k)
-    ∎
+  ((+ 1) ℤ.* k ℤ.+ (+ 1) ℤ.* k) ℤ.* + suc n 
+  ≡⟨ cong (λ a -> ((a ℤ.+ a) ℤ.* + suc n)) (proj₁ ℤ*-identity k) ⟩
+  (k ℤ.+ k) ℤ.* + suc n 
+  ≡⟨ cong (λ a -> a ℤ.* + suc n) (P.sym (lem k)) ⟩
+  (+ 2) ℤ.* k ℤ.* (+ suc n) 
+  ≡⟨ cong (λ a -> a ℤ.* + suc n) (ℤ*-comm (+ 2) k) ⟩
+  k ℤ.* (+ 2) ℤ.* (+ suc n) 
+  ≡⟨ ℤ*-assoc k (+ 2) (+ suc n) ⟩
+  k ℤ.* ((+ 2) ℤ.* (+ suc n)) 
+  ≡⟨ cong (λ a -> k ℤ.* a) (lem (+ suc n)) ⟩
+  k ℤ.* (+ suc (n ℕ.+ suc n)) 
+  ≡⟨ cong (λ a -> k ℤ.* + suc a) (+-comm n (suc n)) ⟩
+  k ℤ.* k ≡⟨ P.sym (proj₁ ℤ*-identity (k ℤ.* k)) ⟩
+  (+ 1) ℤ.* (k ℤ.* k)
+  ∎
     where
       open P.≡-Reasoning
       k = + suc (suc (n ℕ.+ n))
       lem : (j : ℤ) -> ((+ 2) ℤ.* j ≡ j ℤ.+ j)
-      lem j = trans (proj₂ ℤdistrib j (+ 1) (+ 1)) (cong₂ ℤ._+_ (proj₁ ℤ*-identity j) (proj₁ ℤ*-identity j)) 
+      lem j = trans (proj₂ ℤdistrib j (+ 1) (+ 1)) 
+        (cong₂ ℤ._+_ (proj₁ ℤ*-identity j) (proj₁ ℤ*-identity j)) 
 
-+-red₂ : (n : ℕ) -> (((+ 1) ÷suc (suc ((suc (n ℕ.+ n)) ℕ.+ (suc (n ℕ.+ n)))) + (+ 1) ÷suc (suc ((suc (n ℕ.+ n)) ℕ.+ (suc (n ℕ.+ n))))) + ((+ 1) ÷suc (suc ((suc (n ℕ.+ n)) ℕ.+ (suc (n ℕ.+ n)))) + (+ 1) ÷suc (suc ((suc (n ℕ.+ n)) ℕ.+ (suc (n ℕ.+ n))))) ℚ.≃ ((+ 1) ÷suc n))
-+-red₂ n = IsEquivalence.trans ℚ.isEquivalence {start} {middle} {end} (+-exist {1÷k + 1÷k}{1÷j}{1÷k + 1÷k}{1÷j} (+-red₁ j) (+-red₁ j)) (+-red₁ n)
++-red₂ : (n : ℕ) -> 
+       (((+ 1) ÷suc (suc ((suc (n ℕ.+ n)) ℕ.+ (suc (n ℕ.+ n)))) +
+       (+ 1) ÷suc (suc ((suc (n ℕ.+ n)) ℕ.+ (suc (n ℕ.+ n))))) 
+      + 
+      ((+ 1) ÷suc (suc ((suc (n ℕ.+ n)) ℕ.+ (suc (n ℕ.+ n)))) +
+      (+ 1) ÷suc (suc ((suc (n ℕ.+ n)) ℕ.+ (suc (n ℕ.+ n))))) 
+      ℚ.≃ ((+ 1) ÷suc n))
++-red₂ n = IsEquivalence.trans ℚ.isEquivalence {start} {middle} {end} 
+  (+-exist {1÷k + 1÷k}{1÷j}{1÷k + 1÷k}{1÷j} (+-red₁ j) (+-red₁ j)) 
+    (+-red₁ n)
   where
     j = suc (n ℕ.+ n)
     k = suc (j ℕ.+ j)
@@ -396,34 +533,397 @@ We also want to be able to reduce the sum of four rationals $\frac{1}{4j + j} + 
     middle = 1÷j + 1÷j
     end = (+ 1) ÷suc n
 \end{code}
-We also need a minor lemma proving that $\frac{1}{m + n} \leq \frac{1}{m}$ for all natural numbers m and n.
+We also need a minor lemma proving that $\frac{1}{suc (m + n)} \leq \frac{1}{suc (m)}$ for all natural numbers m and n.
 \begin{code}
 ℚ≤lem : {m n : ℕ} -> ((+ 1) ÷suc (m ℕ.+ n) ≤ (+ 1) ÷suc m)
 ℚ≤lem {m}{n} =  *≤* (ℤ.+≤+ (ℕ.s≤s ((m≤m+n m n) +-mono (z≤n))))
 \end{code}
-The triangle inequality is not yet proven at this time, but left as a postulate.
+Just like we did for the equivalence relation on rational numbers we need to show that inequality of rational numbers is preserved under addition. The idea of this proof is similar to the one proving \texttt{+-exist}. The corresponding proof for integers has also been added to the module \texttt{Data/Integer/Properties.agda}:
 \begin{code}
-postulate ℚtriang : (x y z : ℚ) -> (∣ x - z ∣ ≤ ∣ x - y ∣ + ∣ y - z ∣)
-\end{code}
-Just like we did for the equivalence relation on rational numbers we need to show that inequality of rational numbers is preserved under addition. The idea of this proof is similar to the one proving \texttt{+-exist}, but I have not been able to formalize it at this time.
-\begin{code}
-postulate _ℚ+-mono_ :  _+_ Preserves₂ _≤_ ⟶ _≤_ ⟶ _≤_
-\end{code}
-We are now ready to give the proof of transitivity of the equivalence relation on real numbers.
-\begin{code}
-trans≃ : {x y z : ℝ} -> (x ≃ y) -> (y ≃ z) -> (x ≃ z)
-trans≃ {x}{y}{z} x≃y y≃z = Bishopslem {x}{z} (λ {j} -> 
-  Nⱼ {j} , λ {n} -> (≤trans 
-    (ℚtriang (ℝ.f x (Nⱼ {j} ℕ.+ n)) (ℝ.f y (Nⱼ {j} ℕ.+ n)) (ℝ.f z (Nⱼ {j} ℕ.+ n))) 
-    (≤trans 
-      ((x≃y {Nⱼ {j} ℕ.+ n}) ℚ+-mono (y≃z {Nⱼ {j} ℕ.+ n})) 
-      (≤trans 
-        (((ℚ≤lem {Nⱼ {j}} {n}) ℚ+-mono (ℚ≤lem {Nⱼ {j}} {n})) ℚ+-mono (((ℚ≤lem {Nⱼ {j}} {n}) ℚ+-mono (ℚ≤lem {Nⱼ {j}} {n}))))
-        (≈->≤ (+-red₂ j) )))))
+_+-mono_ :  _+_ Preserves₂ _≤_ ⟶ _≤_ ⟶ _≤_
+_+-mono_ {p}{q}{x}{y} (*≤* pq) (*≤* xy) = *≤* (begin
+  (pn ℤ.* xd ℤ.+ xn ℤ.* pd) ℤ.* (qd ℤ.* yd)
+  ∼⟨ ≡⇒≤ (proj₂ ℤdistrib (qd ℤ.* yd) (pn ℤ.* xd) (xn ℤ.* pd))   ⟩
+  pn ℤ.* xd ℤ.* (qd ℤ.* yd) ℤ.+ xn ℤ.* pd ℤ.* (qd ℤ.* yd) 
+  ∼⟨ ≡⇒≤ (cong₂ ℤ._+_ (ℤ*-assoc pn xd (qd ℤ.* yd))
+    (ℤ*-assoc xn pd (qd ℤ.* yd))) ⟩
+  pn ℤ.* (xd ℤ.* (qd ℤ.* yd)) ℤ.+ xn ℤ.* (pd ℤ.* (qd ℤ.* yd)) 
+  ∼⟨ ≡⇒≤ (cong₂ (λ a b -> pn ℤ.* a ℤ.+ xn ℤ.* (pd ℤ.* b)) 
+    (P.sym (ℤ*-assoc xd qd yd)) (ℤ*-comm qd yd)) ⟩
+  pn ℤ.* (xd ℤ.* qd ℤ.* yd) ℤ.+ xn ℤ.* (pd ℤ.* (yd ℤ.* qd)) 
+  ∼⟨ ≡⇒≤ (cong₂ (λ a b -> pn ℤ.* (a ℤ.* yd) ℤ.+ xn ℤ.* b) 
+    (ℤ*-comm xd qd) (P.sym (ℤ*-assoc pd yd qd))) ⟩
+  pn ℤ.* (qd ℤ.* xd ℤ.* yd) ℤ.+ xn ℤ.* (pd ℤ.* yd ℤ.* qd) 
+  ∼⟨ ≡⇒≤ (cong₂ (λ a b -> pn ℤ.* a ℤ.+ xn ℤ.* (b ℤ.* qd)) 
+    (ℤ*-assoc qd xd yd) (ℤ*-comm pd yd)) ⟩
+  pn ℤ.* (qd ℤ.* (xd ℤ.* yd)) ℤ.+ xn ℤ.* (yd ℤ.* pd ℤ.* qd) 
+  ∼⟨ ≡⇒≤ (cong₂ (λ a b -> a ℤ.+ xn ℤ.* b) 
+    (P.sym (ℤ*-assoc pn qd (xd ℤ.* yd))) (ℤ*-assoc yd pd qd)) ⟩
+  pn ℤ.* qd ℤ.* (+ (suc xd-1 ℕ.* suc yd-1)) ℤ.+ xn ℤ.*
+    (yd ℤ.* (pd ℤ.* qd))
+  ∼⟨ (*-+-right-mono (yd-1 ℕ.+ xd-1 ℕ.* (suc yd-1)) pq)
+    ℤ+-mono
+    (≡⇒≤ (P.sym (ℤ*-assoc xn yd (pd ℤ.* qd)))) ⟩
+  qn ℤ.* pd ℤ.* (xd ℤ.* yd) ℤ.+ xn ℤ.* yd ℤ.* (pd ℤ.* qd) 
+  ∼⟨ (≡⇒≤ (ℤ*-assoc qn pd (xd ℤ.* yd))) ℤ+-mono
+    (*-+-right-mono (qd-1 ℕ.+ pd-1 ℕ.* (suc qd-1)) xy)  ⟩
+  qn ℤ.* (pd ℤ.* (xd ℤ.* yd)) ℤ.+ yn ℤ.* xd ℤ.* (pd ℤ.* qd) 
+  ∼⟨ ≡⇒≤ (cong₂ (λ a b -> qn ℤ.* (pd ℤ.* a) ℤ.+ yn ℤ.* xd ℤ.* b) 
+    (ℤ*-comm xd yd) (ℤ*-comm pd qd)) ⟩
+  qn ℤ.* (pd ℤ.* (yd ℤ.* xd)) ℤ.+ yn ℤ.* xd ℤ.* (qd ℤ.* pd) 
+  ∼⟨ ≡⇒≤ (cong₂ (λ a b -> qn ℤ.* a ℤ.+ b) 
+    (P.sym (ℤ*-assoc pd yd xd )) (ℤ*-assoc yn xd (qd ℤ.* pd))) ⟩
+  qn ℤ.* (pd ℤ.* yd ℤ.* xd) ℤ.+ yn ℤ.* (xd ℤ.* (qd ℤ.* pd)) 
+  ∼⟨ ≡⇒≤ (cong₂ (λ a b -> qn ℤ.* (a ℤ.* xd) ℤ.+ yn ℤ.* b) 
+    (ℤ*-comm pd yd) (P.sym (ℤ*-assoc xd qd pd ))) ⟩
+  qn ℤ.* (yd ℤ.* pd ℤ.* xd) ℤ.+ yn ℤ.* (xd ℤ.* qd ℤ.* pd) 
+  ∼⟨ ≡⇒≤ (cong₂ (λ a b -> qn ℤ.* a ℤ.+ yn ℤ.* (b ℤ.* pd)) 
+    (ℤ*-assoc yd pd xd) (ℤ*-comm xd qd)) ⟩
+  qn ℤ.* (yd ℤ.* (pd ℤ.* xd)) ℤ.+ yn ℤ.* (qd ℤ.* xd ℤ.* pd) 
+  ∼⟨ ≡⇒≤ (cong₂ (λ a b -> a ℤ.+ yn ℤ.* b) 
+    (P.sym (ℤ*-assoc qn yd (pd ℤ.* xd))) (ℤ*-assoc qd xd pd)) ⟩
+  qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* (qd ℤ.* (xd ℤ.* pd)) 
+  ∼⟨ ≡⇒≤ (cong (λ a -> qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* (qd ℤ.* a)) 
+    (ℤ*-comm xd pd)) ⟩
+  qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* (qd ℤ.* (pd ℤ.* xd)) 
+  ∼⟨ ≡⇒≤ (cong (λ a -> qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ a) 
+    (P.sym (ℤ*-assoc yn qd (pd ℤ.* xd)))) ⟩
+  qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* qd ℤ.* (pd ℤ.* xd) 
+  ∼⟨ ≡⇒≤ (P.sym (proj₂ ℤdistrib (pd ℤ.* xd) (qn ℤ.* yd) (yn ℤ.* qd))) ⟩
+  (qn ℤ.* yd ℤ.+ yn ℤ.* qd) ℤ.* (pd ℤ.* xd)
+        ∎)
   where
-    ≈->≤ = IsPreorder.reflexive (IsPartialOrder.isPreorder (IsTotalOrder.isPartialOrder (IsDecTotalOrder.isTotalOrder (DecTotalOrder.isDecTotalOrder ℚ.decTotalOrder))))
-    ≤trans = DecTotalOrder.trans  ℚ.decTotalOrder
-    Nⱼ = λ {j} -> suc ((suc (j ℕ.+ j) ℕ.+ (suc (j ℕ.+ j))))
+     open DecTotalOrder ℤ.decTotalOrder using (preorder)
+       renaming (reflexive to ≡⇒≤)
+     open Pre preorder
+     pn = ℚ.numerator p
+     pd = ℚ.denominator p
+     pd-1 = ℚ.denominator-1 p
+     qn = ℚ.numerator q
+     qd = ℚ.denominator q
+     qd-1 = ℚ.denominator-1 q
+     xn = ℚ.numerator x
+     xd = ℚ.denominator x
+     xd-1 = ℚ.denominator-1 x
+     yn = ℚ.numerator y
+     yd = ℚ.denominator y
+     yd-1 = ℚ.denominator-1 y
+\end{code}
+The final part needed to show transitivity is to prove the triangle inequality for rational numbers. The strategy for solving it is to use the fact that the equality relation over rational numbers is decidable, and therefore we can split the proof into cases depending on the order of the three numbers $x, y$ and $z$. The proof will also utilize the fact that addition of rational numbers is commutative and associative, properties that are proven with this work, but not listed below. Another important part of the proof are the two lemmas The core of this proof is essentially $ℚ≤-abs₁ : \{x\ y : ℚ\} -> (x ≤ y) -> ∣ x - y ∣ ℚ.≃ y - x$. The complete path to proving the triangle inequality is listed below:
+\begin{code}
+ℚ≤-abs₁ : {x y : ℚ} -> (x ≤ y) -> (∣ x - y ∣ ℚ.≃ y - x)
+ℚ≤-abs₁ { -[1+ n₁ ] ÷suc d₁} { -[1+ n₂ ] ÷suc d₂} (*≤* p) = begin
+    + ℤ.∣ -[1+ n₁ ] ℤ.* + (suc d₂) ℤ.- (-[1+  n₂ ] ℤ.* + (suc d₁)) ∣
+    ℤ.* + ((suc d₂) ℕ.* (suc d₁)) ≡⟨ cong₂ (λ a b -> a ℤ.* + b)
+    (∣-∣-≤ { -[1+ n₁ ] ℤ.* + (suc d₂)}{ (-[1+  n₂ ] ℤ.* + (suc d₁))} p)
+    (*-comm (suc d₂)(suc d₁)) ⟩
+  ((-[1+  n₂ ] ℤ.* + (suc d₁) ℤ.- (-[1+ n₁ ] ℤ.* + (suc d₂))) ℤ.*
+  + ((suc d₁) ℕ.* (suc d₂)) ∎)
+     where
+     open P.≡-Reasoning
+ℚ≤-abs₁ {(+ zero) ÷suc d₁} { -[1+ n₂ ] ÷suc d₂} (*≤* p) = begin
+    + ℤ.∣ + zero ℤ.* + (suc d₂) ℤ.- (-[1+  n₂ ] ℤ.* + (suc d₁)) ∣
+    ℤ.* + ((suc d₂) ℕ.* (suc d₁)) ≡⟨ cong₂ (λ a b -> a ℤ.* + b)
+    (∣-∣-≤ { + zero ℤ.* + (suc d₂)}{ (-[1+  n₂ ] ℤ.* + (suc d₁))} p)
+    (*-comm (suc d₂)(suc d₁)) ⟩
+  ((-[1+  n₂ ] ℤ.* + (suc d₁) ℤ.- (+ zero ℤ.* + (suc d₂))) ℤ.*
+  + ((suc d₁) ℕ.* (suc d₂)) ∎)
+     where
+     open P.≡-Reasoning
+ℚ≤-abs₁ {(+ suc n) ÷suc d₁} { -[1+ n₂ ] ÷suc d₂} (*≤* p) = begin
+    + ℤ.∣ + suc n ℤ.* + (suc d₂) ℤ.- (-[1+  n₂ ] ℤ.* + (suc d₁))
+    ∣ ℤ.* + ((suc d₂) ℕ.* (suc d₁)) ≡⟨ cong₂ (λ a b -> a ℤ.* + b)
+    (∣-∣-≤ { + suc n ℤ.* + (suc d₂)}{ (-[1+  n₂ ] ℤ.* + (suc d₁))} p)
+    (*-comm (suc d₂)(suc d₁)) ⟩
+  ((-[1+  n₂ ] ℤ.* + (suc d₁) ℤ.- (+ suc n ℤ.* + (suc d₂))) ℤ.*
+  + ((suc d₁) ℕ.* (suc d₂)) ∎)
+     where
+     open P.≡-Reasoning
+ℚ≤-abs₁ { -[1+ n ] ÷suc d₁} {(+ zero) ÷suc d₂} (*≤* p) = begin
+    + ℤ.∣ -[1+ n ] ℤ.* + (suc d₂) ℤ.- (+ zero ℤ.* + (suc d₁)) ∣
+    ℤ.* + ((suc d₂) ℕ.* (suc d₁)) ≡⟨ cong₂ (λ a b -> a ℤ.* + b)
+    (∣-∣-≤ { -[1+ n ] ℤ.* + (suc d₂)}{ (+ zero ℤ.* + (suc d₁))} p)
+    (*-comm (suc d₂)(suc d₁)) ⟩
+  ((+ zero ℤ.* + (suc d₁) ℤ.- (-[1+ n ] ℤ.* + (suc d₂))) ℤ.*
+  + ((suc d₁) ℕ.* (suc d₂)) ∎)
+     where
+     open P.≡-Reasoning
+ℚ≤-abs₁ {(+ zero) ÷suc d₁} {(+ zero) ÷suc d₂} (*≤* p) = begin
+    + ℤ.∣ + zero ℤ.* + (suc d₂) ℤ.- (+ zero ℤ.* + (suc d₁)) ∣ ℤ.*
+    + ((suc d₂) ℕ.* (suc d₁)) ≡⟨ cong₂ (λ a b -> a ℤ.* + b)
+    (∣-∣-≤ { + zero ℤ.* + (suc d₂)}{ (+ zero ℤ.* + (suc d₁))} p)
+    (*-comm (suc d₂)(suc d₁)) ⟩
+  ((+ zero ℤ.* + (suc d₁) ℤ.- (+ zero ℤ.* + (suc d₂))) ℤ.*
+  + ((suc d₁) ℕ.* (suc d₂)) ∎)
+     where
+     open P.≡-Reasoning
+ℚ≤-abs₁ {(+ suc n) ÷suc d₁} {(+ zero) ÷suc d₂} (*≤* p) = begin
+    + ℤ.∣ + suc n ℤ.* + (suc d₂) ℤ.- (+ zero ℤ.* + (suc d₁)) ∣
+    ℤ.* + ((suc d₂) ℕ.* (suc d₁)) ≡⟨ cong₂ (λ a b -> a ℤ.* + b)
+    (∣-∣-≤ { + suc n ℤ.* + (suc d₂)}{ (+ zero ℤ.* + (suc d₁))} p)
+    (*-comm (suc d₂)(suc d₁)) ⟩
+  ((+ zero ℤ.* + (suc d₁) ℤ.- (+ suc n ℤ.* + (suc d₂))) ℤ.*
+  + ((suc d₁) ℕ.* (suc d₂)) ∎)
+     where
+     open P.≡-Reasoning
+ℚ≤-abs₁ { -[1+ n ] ÷suc d₁} {(+ suc n₁) ÷suc d₂} (*≤* p) = begin
+    + ℤ.∣ -[1+ n ] ℤ.* + (suc d₂) ℤ.- (+ suc n₁ ℤ.* + (suc d₁)) ∣
+    ℤ.* + ((suc d₂) ℕ.* (suc d₁)) ≡⟨ cong₂ (λ a b -> a ℤ.* + b)
+    (∣-∣-≤ { -[1+ n ] ℤ.* + (suc d₂)}{ (+ suc n₁ ℤ.* + (suc d₁))} p)
+    (*-comm (suc d₂)(suc d₁)) ⟩
+  ((+ suc n₁ ℤ.* + (suc d₁) ℤ.- (-[1+ n ] ℤ.* + (suc d₂))) ℤ.*
+  + ((suc d₁) ℕ.* (suc d₂)) ∎)
+     where
+     open P.≡-Reasoning
+ℚ≤-abs₁ {(+ zero) ÷suc d₁} {(+ suc n₁) ÷suc d₂} (*≤* p) = begin
+    + ℤ.∣ + zero ℤ.* + (suc d₂) ℤ.- (+ suc n₁ ℤ.* + (suc d₁)) ∣ ℤ.*
+    + ((suc d₂) ℕ.* (suc d₁)) ≡⟨ cong₂ (λ a b -> a ℤ.* + b)
+    (∣-∣-≤ { + zero ℤ.* + (suc d₂)}{ (+ suc n₁ ℤ.* + (suc d₁))} p)
+    (*-comm (suc d₂)(suc d₁)) ⟩
+  ((+ suc n₁ ℤ.* + (suc d₁) ℤ.- (+ zero ℤ.* + (suc d₂))) ℤ.*
+  + ((suc d₁) ℕ.* (suc d₂)) ∎)
+     where
+     open P.≡-Reasoning
+ℚ≤-abs₁ {(+ suc n) ÷suc d₁} {(+ suc n₁) ÷suc d₂} (*≤* p) = begin
+    + ℤ.∣ + suc n ℤ.* + (suc d₂) ℤ.- (+ suc n₁ ℤ.* + (suc d₁)) ∣
+    ℤ.* + ((suc d₂) ℕ.* (suc d₁)) ≡⟨ cong₂ (λ a b -> a ℤ.* + b)
+    (∣-∣-≤ { + suc n ℤ.* + (suc d₂)}{ (+ suc n₁ ℤ.* + (suc d₁))} p)
+    (*-comm (suc d₂)(suc d₁)) ⟩
+  ((+ suc n₁ ℤ.* + (suc d₁) ℤ.- (+ suc n ℤ.* + (suc d₂))) ℤ.*
+  + ((suc d₁) ℕ.* (suc d₂)) ∎)
+     where
+     open P.≡-Reasoning
+
+ℚ≤-abs₂ : {x y : ℚ} -> (x ≤ y) -> ∣ y - x ∣ ℚ.≃ y - x
+ℚ≤-abs₂ {x}{y} le = ℚtrans {∣ y - x ∣}{∣ x - y ∣}{y - x}
+  (≡⇒≃ (ℚabs₂ y x)) (ℚ≤-abs₁ le)
+  where
+  open IsEquivalence ℚ.isEquivalence using ()
+       renaming (trans to ℚtrans)
+
+x-x : {x : ℚ} -> (x - x ℚ.≃ (+ 0) ÷suc 0)
+x-x {(+ zero) ÷suc d} = refl
+x-x {(+ suc n) ÷suc d} = begin (+ suc n ℤ.* + suc d ℤ.-
+  + suc n ℤ.* + suc d) ℤ.* + 1
+    ≡⟨ cong (λ a -> a ℤ.* + 1) (n⊖n≡0 (suc n ℕ.* suc d))  ⟩
+    + 0 ∎
+    where
+      open P.≡-Reasoning
+x-x { -[1+ n ] ÷suc d} = begin (-[1+ n ] ℤ.* + suc d ℤ.-
+  -[1+ n ] ℤ.* + suc d) ℤ.* + 1
+    ≡⟨ cong (λ a -> a ℤ.* + 1) (n⊖n≡0 (suc n ℕ.* suc d))  ⟩
+    + 0 ∎
+    where
+    open P.≡-Reasoning
+
+data _<_ : ℚ → ℚ → Set where
+  *≤* : ∀ {p q} →
+        (ℚ.numerator p ℤ.* (+ suc (ℚ.denominator-1 q))) ℤ<
+        (ℚ.numerator q ℤ.* (+ suc (ℚ.denominator-1 p))) →
+        p < q
+
+_>_ : Rel ℚ Level.zero
+m > n = n < m
+
+_≰_ : Rel ℚ Level.zero
+a ≰ b = ¬ a ≤ b
+
+≰⇒> : _≰_ ⇒ _>_
+≰⇒> ¬p = *≤* (ℤ≰⇒> (λ z → ¬p (*≤* z)))
+
+<⇒≤ : _<_ ⇒ _≤_
+<⇒≤ (*≤* le) = *≤* (ℤ≤⇒pred≤ _ _ le)
+
+triang : (x y z : ℚ) -> (∣ x - z ∣ ≤ ∣ x - y ∣ + ∣ y - z ∣)
+triang x y z with x ℚ.≤? y | y ℚ.≤? z | x ℚ.≤? z
+triang x y z | yes p | yes p₁ | yes p₂ = begin
+  ∣ x - z ∣   ∼⟨ ≡⇒≤ (ℚ≤-abs₁ p₂)   ⟩
+  z - x ∼⟨ ≡⇒≤ (P.sym (proj₂ +-identity (z - x))) ⟩
+  (z - x) + ((+ 0) ÷suc 0) ∼⟨  ≡⇒≤ {(z - x)}{(z - x)} refl
+  +-mono ≡⇒≤ {(+ 0) ÷suc 0}{(y - y)}
+  (ℚsym {y - y}{(+ 0) ÷suc 0} (x-x {y})) ⟩
+  (z - x) + (y - y) ∼⟨ ≡⇒≤ {z - x}{ - x + z} (+-comm z (- x))
+  +-mono (≡⇒≤ {(y - y)}{(y - y)} refl)   ⟩
+  - x + z + (y - y) ∼⟨ ≡⇒≤ (+-assoc (- x) z (y - y) )   ⟩
+  - x + (z + (y - y)) ∼⟨ ≡⇒≤ { - x}{ - x} refl
+  +-mono ≡⇒≤ {z + (y - y)}{z + y - y}
+  (ℚsym {z + y - y}{z + (y - y)} (+-assoc z y (- y)) )   ⟩
+  - x + (z + y - y) ∼⟨ ≡⇒≤ { - x}{ - x} refl +-mono
+  (≡⇒≤ {z + y}{y + z} (+-comm z y )
+  +-mono ≡⇒≤ { - y}{ - y} refl)   ⟩
+  - x + (y + z - y) ∼⟨ ≡⇒≤ { - x}{ - x} refl
+  +-mono ≡⇒≤ {y + z - y}{y + (z - y)} (+-assoc y z (- y) )   ⟩
+  - x + (y + (z - y)) ∼⟨ ≡⇒≤ { - x + (y + (z - y))}{ - x + y + (z - y)}
+  (ℚsym { - x + y + (z - y)}{ - x + (y + (z - y))}
+  (+-assoc (- x) y (z - y) ))   ⟩
+  - x + y + (z - y) ∼⟨ ≡⇒≤ { - x + y}{y - x}
+  (+-comm (- x) y) +-mono ≡⇒≤ {z - y}{z - y} refl  ⟩
+  (y - x) + (z - y) ∼⟨  ≡⇒≤ {y - x}{∣ x - y ∣}(ℚsym {∣ x - y ∣}{y - x}
+  (ℚ≤-abs₁ {x}{y} p)) +-mono ≡⇒≤ {z - y}{∣ y - z ∣}
+  (ℚsym {∣ y - z ∣}{z - y} (ℚ≤-abs₁ {y}{z} p₁))   ⟩
+  ∣ x - y ∣ + ∣ y - z ∣ ∎
+     where
+     open IsEquivalence ℚ.isEquivalence using ()
+       renaming (sym to ℚsym; trans to ℚtrans)
+     open DecTotalOrder ℚ.decTotalOrder using (preorder)
+       renaming (reflexive to ≡⇒≤)
+     open Pre preorder
+triang x y z | yes p | yes p₁ | no ¬p = ⊥-elim (¬p (≤trans p p₁))
+  where
+  open DecTotalOrder ℚ.decTotalOrder using ()
+      renaming (trans to ≤trans)
+triang x y z | yes p | no ¬p | yes p₁ = begin 
+  ∣ x - z ∣   ∼⟨ ≡⇒≤ (ℚ≤-abs₁ p₁)   ⟩
+  z - x ∼⟨ ≡⇒≤ (P.sym (proj₂ +-identity (z - x))) ⟩
+  (z - x) + ((+ 0) ÷suc 0) ∼⟨  ≡⇒≤ {(z - x)}{(z - x)} refl +-mono
+  ≡⇒≤ {(+ 0) ÷suc 0}{(z - z)}(ℚsym {z - z}{(+ 0) ÷suc 0} (x-x {z})) ⟩
+  z - x + (z - z) ∼⟨ ((<⇒≤ (≰⇒> ¬p)) +-mono ≡⇒≤ { - x}{ - x} refl)
+  +-mono ((<⇒≤ (≰⇒> ¬p)) +-mono ≡⇒≤ { - z}{ - z} refl) ⟩
+  (y - x) + (y - z) ∼⟨  ≡⇒≤ {y - x}{∣ x - y ∣}(ℚsym {∣ x - y ∣}{y - x}
+  (ℚ≤-abs₁ {x}{y} p)) +-mono ≡⇒≤ {y - z}{∣ y - z ∣}
+  (ℚsym {∣ y - z ∣}{y - z} (ℚ≤-abs₂ (<⇒≤ (≰⇒> ¬p))))⟩
+  ∣ x - y ∣ + ∣ y - z ∣ ∎ 
+     where
+     open IsEquivalence ℚ.isEquivalence using ()
+       renaming (sym to ℚsym; trans to ℚtrans)
+     open DecTotalOrder ℚ.decTotalOrder using (preorder)
+       renaming (reflexive to ≡⇒≤)
+     open Pre preorder
+triang x y z | yes p | no ¬p | no ¬p₁ = begin
+  ∣ x - z ∣   ∼⟨ ≡⇒≤ (ℚ≤-abs₂ (<⇒≤ (≰⇒> ¬p₁))) ⟩
+  (x - z) ∼⟨   ≡⇒≤ (P.sym (proj₁ +-identity (x - z)))  ⟩
+  (+ 0) ÷suc 0 + (x - z) ∼⟨  ≡⇒≤ {(+ 0) ÷suc 0}{x - x}
+  (ℚsym {x - x}{(+ 0) ÷suc 0} (x-x {x})) +-mono ≡⇒≤ {x - z}{x - z} refl ⟩
+  (x - x) + (x - z) ∼⟨  (p  +-mono ≡⇒≤ { - x}{ - x} refl ) +-mono
+  (p +-mono ≡⇒≤ { - z}{ - z} refl) ⟩
+  (y - x) + (y - z) ∼⟨  ≡⇒≤ {y - x}{∣ x - y ∣}(ℚsym {∣ x - y ∣}{y - x}
+  (ℚ≤-abs₁ p)) +-mono ≡⇒≤ {y - z}{∣ y - z ∣} (ℚsym {∣ y - z ∣}{y - z}
+  (ℚ≤-abs₂ (<⇒≤ (≰⇒> ¬p))))⟩ 
+  ∣ x - y ∣ + ∣ y - z ∣ ∎ 
+     where
+     open IsEquivalence ℚ.isEquivalence using ()
+       renaming (sym to ℚsym; trans to ℚtrans)
+     open DecTotalOrder ℚ.decTotalOrder using (preorder)
+       renaming (reflexive to ≡⇒≤)
+     open Pre preorder
+triang x y z | no ¬p | yes p | yes p₁ = begin
+  ∣ x - z ∣                 ∼⟨ ≡⇒≤ (ℚ≤-abs₁ p₁)   ⟩
+  z - x                    ∼⟨ ≡⇒≤ (P.sym (proj₂ +-identity (z - x))) ⟩
+  (z - x) + ((+ 0) ÷suc 0) ∼⟨  ≡⇒≤ {(z - x)}{(z - x)} refl
+  +-mono ≡⇒≤ {(+ 0) ÷suc 0}{(y - y)}(ℚsym {y - y}{(+ 0)÷suc 0}(x-x {y}))⟩
+  z - x + (y - y)          ∼⟨ ≡⇒≤ (+-assoc z (- x) (y - y)) ⟩
+  z + (- x + (y - y))      ∼⟨ ≡⇒≤ {z}{z} refl +-mono
+  ≡⇒≤ { - x + (y - y)}{ - x + y - y}
+  (ℚsym { - x + y - y}{ - x + (y - y)} (+-assoc (- x) y (- y))) ⟩
+  z + (- x + y - y)        ∼⟨ ≡⇒≤ {z}{z} refl +-mono
+  ((≡⇒≤ { - x}{ - x} refl  +-mono  (<⇒≤ (≰⇒> ¬p)))
+  +-mono (≡⇒≤ { - y}{ - y} refl)) ⟩
+  z + (- x + x - y)        ∼⟨ ≡⇒≤ {z}{z} refl +-mono
+  (≡⇒≤ { - x + x}{(+ 0)÷suc 0} (ℚtrans { - x + x}{x - x}{(+ 0)÷suc 0}
+  (+-comm (- x) x) (x-x {x})) +-mono ≡⇒≤ { - y}{ - y} refl) ⟩
+  z + ((+ 0)÷suc 0 - y) ∼⟨ ≡⇒≤ {z}{z} refl +-mono
+  ≡⇒≤ {((+ 0)÷suc 0 - y)}{ - y} (proj₁ +-identity (- y)) ⟩
+  z - y ∼⟨ ≡⇒≤  (ℚsym {(+ 0) ÷suc 0 + (z - y)}{z - y}(proj₁ +-identity (z - y))) ⟩
+  ((+ 0) ÷suc 0) + (z - y) ∼⟨ ≡⇒≤ {(+ 0) ÷suc 0}{(y - y)}
+  (ℚsym {y - y}{(+ 0) ÷suc 0}(x-x {y})) +-mono ≡⇒≤ {z - y}{z - y} refl ⟩
+  y - y + (z - y) ∼⟨ (<⇒≤ (≰⇒> ¬p) +-mono ≡⇒≤ { - y}{ - y} refl)
+  +-mono ≡⇒≤ {z - y}{z - y} refl ⟩
+  x - y + (z - y) ∼⟨ ≡⇒≤ {x - y}{∣ x - y ∣}(ℚsym {∣ x - y ∣}{x - y}
+  (ℚ≤-abs₂ (<⇒≤ (≰⇒> ¬p)))) +-mono ≡⇒≤ {z - y}{∣ y - z ∣}
+  (ℚsym {∣ y - z ∣}{z - y} (ℚ≤-abs₁ p)) ⟩
+  ∣ x - y ∣ + ∣ y - z ∣ ∎ 
+     where
+     open IsEquivalence ℚ.isEquivalence using ()
+       renaming (sym to ℚsym; trans to ℚtrans)
+     open DecTotalOrder ℚ.decTotalOrder using (preorder)
+       renaming (reflexive to ≡⇒≤)
+     open Pre preorder
+triang x y z | no ¬p | yes p | no ¬p₁ = begin
+  ∣ x - z ∣   ∼⟨ ≡⇒≤ (ℚ≤-abs₂ (<⇒≤ (≰⇒> ¬p₁)))   ⟩
+  x - z ∼⟨ ≡⇒≤ (ℚsym {x - z + (+ 0)÷suc 0}{x - z}(proj₂ +-identity (x - z))) ⟩
+  (x - z) + ((+ 0) ÷suc 0) ∼⟨  ≡⇒≤ {x - z}{x - z} refl
+  +-mono ≡⇒≤ {(+ 0) ÷suc 0}{(y - y)}(ℚsym {y - y}{(+ 0)÷suc 0}(x-x {y}))⟩
+  x - z + (y - y) ∼⟨ ≡⇒≤ (+-assoc x (- z) (y - y)) ⟩
+  x + (- z + (y - y)) ∼⟨ ≡⇒≤ {x}{x} refl +-mono
+  ≡⇒≤ { - z + (y - y)}{ - z + y - y}
+  (ℚsym { - z + y - y}{ - z + (y - y)} (+-assoc (- z) y (- y))) ⟩
+  x + (- z + y - y) ∼⟨ ≡⇒≤ {x}{x} refl +-mono ((≡⇒≤ { - z}{ - z} refl
+  +-mono p)  +-mono (≡⇒≤ { - y}{ - y} refl)) ⟩
+  x + (- z + z - y) ∼⟨ ≡⇒≤ {x}{x} refl +-mono
+  (≡⇒≤ { - z + z}{(+ 0)÷suc 0} (ℚtrans { - z + z}{z - z}{(+ 0)÷suc 0}
+  (+-comm (- z) z) (x-x {z})) +-mono ≡⇒≤ { - y}{ - y} refl) ⟩
+  x + ((+ 0) ÷suc 0 - y) ∼⟨ ≡⇒≤ {x}{x} refl +-mono
+  ≡⇒≤ {(+ 0)÷suc 0 - y}{ - y} (proj₁ +-identity (- y)) ⟩
+  x - y ∼⟨ ≡⇒≤ (ℚsym {x - y + (+ 0) ÷suc 0}{x - y} (proj₂ +-identity (x - y))) ⟩
+  x - y + (+ 0) ÷suc 0 ∼⟨ ≡⇒≤ {x - y}{x - y} refl +-mono
+  ≡⇒≤ {(+ 0) ÷suc 0}{y - y}(ℚsym {y - y}{(+ 0) ÷suc 0} (x-x {y})) ⟩
+  x - y + (y - y) ∼⟨ ≡⇒≤ {x - y}{x - y} refl +-mono
+  (p +-mono ≡⇒≤ { - y}{ - y} refl) ⟩
+  x - y + (z - y) ∼⟨ ≡⇒≤ {x - y}{∣ x - y ∣}(ℚsym {∣ x - y ∣}{x - y}
+  (ℚ≤-abs₂ (<⇒≤ (≰⇒> ¬p)))) +-mono ≡⇒≤ {z - y}{∣ y - z ∣}
+  (ℚsym {∣ y - z ∣}{z - y} (ℚ≤-abs₁ p)) ⟩
+  ∣ x - y ∣ + ∣ y - z ∣ ∎
+     where
+     open IsEquivalence ℚ.isEquivalence using ()
+       renaming (sym to ℚsym; trans to ℚtrans)
+     open DecTotalOrder ℚ.decTotalOrder using (preorder)
+       renaming (reflexive to ≡⇒≤)
+     open Pre preorder
+triang x y z | no ¬p | no ¬p₁ | yes p =
+  ⊥-elim (¬p (≤trans p (<⇒≤ (≰⇒> ¬p₁))))
+  where
+  open DecTotalOrder ℚ.decTotalOrder using ()
+      renaming (trans to ≤trans)
+triang x y z | no ¬p | no ¬p₁ | no ¬p₂ = begin 
+  ∣ x - z ∣             ∼⟨ ≡⇒≤ (ℚ≤-abs₂ (<⇒≤ (≰⇒> ¬p₂)))   ⟩
+  x - z                ∼⟨ ≡⇒≤ {x}{x + (+ 0)÷suc 0}
+  (ℚsym {x + (+ 0)÷suc 0}{x} (proj₂ +-identity x)) +-mono ≡⇒≤ { - z}{ - z} refl ⟩
+  x + (+ 0) ÷suc 0 - z ∼⟨ (≡⇒≤ {x}{x} refl  +-mono
+  ≡⇒≤ {(+ 0)÷suc 0}{y - y} (ℚsym {y - y}{(+ 0)÷suc 0} (x-x {y}))) +-mono
+  ≡⇒≤ { - z}{ - z} refl ⟩
+  x + (y - y) - z      ∼⟨ (≡⇒≤ {x}{x} refl  +-mono
+  ≡⇒≤ {y - y}{ - y + y} (+-comm y (- y))) +-mono ≡⇒≤ { - z}{ - z}refl ⟩
+  x + (- y + y) - z    ∼⟨ ≡⇒≤ {x + (- y + y)}{x - y + y}
+  (ℚsym {x - y + y}{x + (- y + y)}(+-assoc x (- y) y)) +-mono
+    ≡⇒≤ { - z}{ - z} refl ⟩
+  x - y + y - z        ∼⟨ ≡⇒≤ { x - y + y - z}{x - y + (y - z)}
+    (+-assoc (x - y) y (- z)) ⟩
+  x - y + (y - z)      ∼⟨ ≡⇒≤ {x - y}{∣ x - y ∣}(ℚsym {∣ x - y ∣}{x - y}
+    (ℚ≤-abs₂ (<⇒≤ (≰⇒> ¬p)))) +-mono
+    ≡⇒≤ {y - z}{∣ y - z ∣}(ℚsym {∣ y - z ∣}{y - z}(ℚ≤-abs₂ (<⇒≤ (≰⇒> ¬p₁))))⟩  
+  ∣ x - y ∣ + ∣ y - z ∣ ∎
+     where
+     open IsEquivalence ℚ.isEquivalence using ()
+       renaming (sym to ℚsym; trans to ℚtrans)
+     open DecTotalOrder ℚ.decTotalOrder using (preorder)
+       renaming (reflexive to ≡⇒≤)
+     open Pre preorder
+\end{code}
+Using these lemmas we are ready to give the proof of transitivity of the equivalence relation on real numbers:
+\begin{code}
+  --transitivity
+  trans≃ : {x y z : ℝ} -> (x ≃ y) -> (y ≃ z) -> (x ≃ z)
+  trans≃ {x}{y}{z} x≃y y≃z = Bishopslem {x}{z} (λ {j} -> 
+    Nⱼ {j} , λ {n} -> (begin 
+    ∣ ℝ.f x (Nⱼ {j} ℕ.+ n) - ℝ.f z (Nⱼ {j} ℕ.+ n) ∣ 
+      ∼⟨ ℚtriang (ℝ.f x (Nⱼ {j} ℕ.+ n)) (ℝ.f y (Nⱼ {j} ℕ.+ n)) (ℝ.f z (Nⱼ {j} ℕ.+ n)) ⟩
+    ∣ ℝ.f x (Nⱼ {j} ℕ.+ n) - ℝ.f y (Nⱼ {j} ℕ.+ n) ∣ + 
+    ∣ ℝ.f y (Nⱼ {j} ℕ.+ n) - ℝ.f z (Nⱼ {j} ℕ.+ n) ∣
+    ∼⟨ (x≃y {Nⱼ {j} ℕ.+ n}) ℚ+-mono (y≃z {Nⱼ {j} ℕ.+ n}) ⟩ 
+    ((suc (Nⱼ {j} ℕ.+ n))⁻¹ ℚ.+ (suc (Nⱼ {j} ℕ.+ n))⁻¹) ℚ.+ 
+    ((suc (Nⱼ {j} ℕ.+ n))⁻¹ ℚ.+ (suc (Nⱼ {j} ℕ.+ n))⁻¹)
+    ∼⟨ ((ℚ≤lem {Nⱼ {j}} {n}) ℚ+-mono (ℚ≤lem {Nⱼ {j}} {n})) 
+           ℚ+-mono 
+         ((ℚ≤lem {Nⱼ {j}} {n}) ℚ+-mono (ℚ≤lem {Nⱼ {j}} {n})) ⟩ 
+    ((suc (Nⱼ {j}))⁻¹ ℚ.+ (suc (Nⱼ {j}))⁻¹) ℚ.+ 
+    ((suc (Nⱼ {j}))⁻¹ ℚ.+ (suc (Nⱼ {j}))⁻¹) 
+    ∼⟨ ≈->≤ (+-red₂ j) ⟩ 
+    ((suc j)⁻¹ ∎) ))
+    where
+      open DecTotalOrder ℚ.decTotalOrder using () 
+        renaming (reflexive to ≈->≤; trans to ≤trans; isPreorder to ℚisPreorder)
+      open Pre record {isPreorder = ℚisPreorder}
+      Nⱼ = λ {j} -> suc ((suc (j ℕ.+ j) ℕ.+ (suc (j ℕ.+ j))))
 \end{code}
 This proves that the relation defined on the real numbers indeed is an equivalence relation and we can create an instance of the type \texttt{IsEquivalence}.
 \begin{code}
@@ -435,24 +935,1558 @@ isEquivalence = record {
   }
 \end{code}
 \section{Summary and future work}
-This work has established much of the framework necessary to formalize the construcitve notion of a real number as described by Errett Bishop in \textit{Constructive Analysis} \cite{bishop:85}. To complete the proof that the relation we have defined on real numbers is an equivalence relation there are three major lemmas that need to be solved:
-\begin{enumerate}
-\item The triangle inequality
+This work has established a great deal of the framework necessary to formalize the constructive notion of a real number as described by Errett Bishop in \textit{Constructive Analysis} \cite{bishop1985constructive}. To complete the proof that the relation we have defined on real numbers is an equivalence relation there is one lemma that remains unproven, Lemma (2.3) in \textit{Constructive Analysis}:
 \begin{code}
-ℚtriang : (x y z : ℚ) -> (∣ x - z ∣ ≤ ∣ x - y ∣ + ∣ y - z ∣)
-ℚtriang x y z = ?
+Bishopslem : {x y : ℝ} -> 
+           ({j : ℕ} -> ∃ λ Nⱼ -> ({m : ℕ} -> 
+           ∣ ℝ.f x (Nⱼ ℕ.+ m) - ℝ.f y (Nⱼ ℕ.+ m) ∣ ≤ (suc j)⁻¹)) 
+           -> (x ≃ y)
+Bishopslem {x}{y} p = ?
 \end{code}
-\item Bishop's lemma
+As a strategy for solving this, we can consider the proof given by Bishop:
+\begin{proof}
+  Assume that for each $j$ in $\mathbb{Z}^+$ there exists $N_j$ satisfying\\
+  \begin{equation*}
+    | x_n - y_n | \leq j^{-1} \quad (n \geq N_j)
+    \end{equation*}
+  Consider a positive integer $n$. If $m$ and $j$ are any positive integers with $m \geq max\{j,N_j\}$, then
+  \begin{equation*}
+    |x_n - y_n| \leq |x_n - x_m| + |x_m - y_m| + |y_m - y_n| \leq (n^{-1} + m^{-1}) + j^{-1}+(n^{-1} + m^{-1})\le 2n^{-1}+3j^{-1}
+  \end{equation*}
+  Since this holds for all $j$ in $\mathbb{Z}^+$, $x$ and $y$ satisfy the previously given equality relation.
+\end{proof}
+We almost have all the tools necessary for constructing a formal version of this proof. Bishop uses the triangle inequality and utilizes the regularity of $x$ and $y$. The final part of the proof, however, removing $3j^{-1}$ from the equation because of the fact that $j$ can be any positive integer, lacks a formal lemma. The type declaration for such a proof could look like this:
 \begin{code}
-Bishopslem : {x y : ℝ} -> ({j : ℕ} -> Σ ℕ λ Nⱼ -> ({m : ℕ} -> ∣ ℝ.f x (Nⱼ ℕ.+ m) - ℝ.f y (Nⱼ ℕ.+ m) ∣ ≤ (suc j)⁻¹)) → (x ≃ y)
-BIshopslem {x}{y}
+  lim : ∀ q -> (∀ j -> q ≤ (+ 1)÷suc j) -> q ≤ (+ 0)÷suc 0
 \end{code}
-\item Addition preserves inequality
+\section{Related work}
+Li Nuo gives a great overview along with an example of how real numbers can be constructed in Agda, with a very similair definition in \cite{nuo2010representing}. This work does not prove that the relation given is an equivalence relation however.\\
+In the proof assistant Coq, there already exists libraries dealing with real numbers, both in axiomatic form and in constructible version. In \textit{Computing with Classical Real Numbers} \cite{kaliszyk2008computing}, Cezary Kalizyk and Russell O'Connor shows how an isomorphism between these two approaches can be created.
+\section{Possible errors}
+The Agda type checker does not leave much room for errors to be made in the actual proving of statements, but mistakes can still occur in formal mathematics. One thing that can happen is that we define things wrong. Great care is therefore required while interpreting informal statements. If one writes the type of a proof wrong, proving it could be impossible.
+
+In this work, I have left a lemma presented by Bishop as an unproved postulate. If it turns out that it is typed wrong, the proof that the equivalence relation on real numbers is transitive would no longer be correct. It is hard to say if such an error might be easy to fix with a minor adjustment or will require a complete rewriting of the proof.
+\section{Code}
+\newgeometry{left=2cm,right=2cm}
+\subsection{Data/Integer/Properties.agda}
 \begin{code}
-_ℚ+-mono_ :  _+_ Preserves₂ _≤_ ⟶ _≤_ ⟶ _≤_
-p₁≤q₁ ℚ+-mono p₂≤q₂ = ?
+  ------------------------------------------------------------------------
+-- The Agda standard library
+--
+-- Some properties about integers
+------------------------------------------------------------------------
+
+module Data.Integer.Properties where
+
+open import Algebra
+import Algebra.FunctionProperties
+import Algebra.Morphism as Morphism
+import Algebra.Properties.AbelianGroup
+open import Algebra.Structures
+open import Data.Integer hiding (_≤?_) renaming (suc to ℤsuc)
+import Data.Integer.Addition.Properties as Add
+import Data.Integer.Multiplication.Properties as Mul
+open import Data.Nat
+  using (ℕ; suc; zero; _∸_; _≤?_; _≥_; _≱_; s≤s; z≤n; ≤-pred)
+  renaming (_+_ to _ℕ+_; _*_ to _ℕ*_; _≤_ to _ℕ≤_; _<_ to _ℕ<_)
+open import Data.Nat.Properties as ℕ using (_*-mono_; ≤-steps; ≤-step)
+  renaming (≤⇒pred≤ to ℕ≤⇒pred≤; ≰⇒> to ℕ≰⇒>)
+open import Data.Nat.Properties.Simple using (+-suc;
+  +-right-identity) renaming (+-comm to ℕ+-comm)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sign as Sign using () renaming (_*_ to _S*_)
+import Data.Sign.Properties as SignProp
+open import Function using (_∘_; _$_)
+open import Relation.Binary
+open import Relation.Binary.PropositionalEquality
+open import Relation.Nullary using (yes; no)
+open import Relation.Nullary.Negation using (contradiction)
+open import Data.Empty
+open Algebra.FunctionProperties (_≡_ {A = ℤ})
+open CommutativeMonoid Add.commutativeMonoid
+  using ()
+  renaming ( assoc to +-assoc; comm to +-comm; identity to +-identity
+           ; isCommutativeMonoid to +-isCommutativeMonoid
+           ; isMonoid to +-isMonoid
+           )
+open CommutativeMonoid Mul.commutativeMonoid
+  using ()
+  renaming ( assoc to *-assoc; comm to *-comm; identity to *-identity
+           ; isCommutativeMonoid to *-isCommutativeMonoid
+           ; isMonoid to *-isMonoid
+           )
+open CommutativeSemiring ℕ.commutativeSemiring
+  using () renaming (zero to *-zero; distrib to *-distrib)
+open DecTotalOrder Data.Nat.decTotalOrder
+  using () renaming (refl to ≤-refl)
+open Morphism.Definitions ℤ ℕ _≡_
+open ℕ.SemiringSolver
+open ≡-Reasoning
+
+------------------------------------------------------------------------
+-- Miscellaneous properties
+
+-- Some properties relating sign and ∣_∣ to _◃_.
+
+sign-◃ : ∀ s n → sign (s ◃ suc n) ≡ s
+sign-◃ Sign.- _ = refl
+sign-◃ Sign.+ _ = refl
+
+sign-cong : ∀ {s₁ s₂ n₁ n₂} →
+            s₁ ◃ suc n₁ ≡ s₂ ◃ suc n₂ → s₁ ≡ s₂
+sign-cong {s₁} {s₂} {n₁} {n₂} eq = begin
+  s₁                  ≡⟨ sym $ sign-◃ s₁ n₁ ⟩
+  sign (s₁ ◃ suc n₁)  ≡⟨ cong sign eq ⟩
+  sign (s₂ ◃ suc n₂)  ≡⟨ sign-◃ s₂ n₂ ⟩
+  s₂                  ∎
+
+abs-◃ : ∀ s n → ∣ s ◃ n ∣ ≡ n
+abs-◃ _      zero    = refl
+abs-◃ Sign.- (suc n) = refl
+abs-◃ Sign.+ (suc n) = refl
+
+abs : {n : ℕ} -> ∣ -[1+ n ] ∣ ≡ suc n
+abs {zero} = refl
+abs {suc n} = refl
+
+abs-cong : ∀ {s₁ s₂ n₁ n₂} →
+           s₁ ◃ n₁ ≡ s₂ ◃ n₂ → n₁ ≡ n₂
+abs-cong {s₁} {s₂} {n₁} {n₂} eq = begin
+  n₁           ≡⟨ sym $ abs-◃ s₁ n₁ ⟩
+  ∣ s₁ ◃ n₁ ∣  ≡⟨ cong ∣_∣ eq ⟩
+  ∣ s₂ ◃ n₂ ∣  ≡⟨ abs-◃ s₂ n₂ ⟩
+  n₂           ∎
+
+-- ∣_∣ commutes with multiplication.
+
+abs-*-commute : Homomorphic₂ ∣_∣ _*_ _ℕ*_
+abs-*-commute i j = abs-◃ _ _
+
+-- If you subtract a natural from itself, then you get zero.
+
+n⊖n≡0 : ∀ n → n ⊖ n ≡ + 0
+n⊖n≡0 zero    = refl
+n⊖n≡0 (suc n) = n⊖n≡0 n
+
+------------------------------------------------------------------------
+-- The integers form a commutative ring
+
+private
+
+  ----------------------------------------------------------------------
+  -- Additive abelian group.
+
+  inverseˡ : LeftInverse (+ 0) -_ _+_
+  inverseˡ -[1+ n ]  = n⊖n≡0 n
+  inverseˡ (+ zero)  = refl
+  inverseˡ (+ suc n) = n⊖n≡0 n
+
+  inverseʳ : RightInverse (+ 0) -_ _+_
+  inverseʳ i = begin
+    i + - i  ≡⟨ +-comm i (- i) ⟩
+    - i + i  ≡⟨ inverseˡ i ⟩
+    + 0      ∎
+
+  +-isAbelianGroup : IsAbelianGroup _≡_ _+_ (+ 0) -_
+  +-isAbelianGroup = record
+    { isGroup = record
+      { isMonoid = +-isMonoid
+      ; inverse  = inverseˡ , inverseʳ
+      ; ⁻¹-cong  = cong -_
+      }
+    ; comm = +-comm
+    }
+
+  open Algebra.Properties.AbelianGroup
+         (record { isAbelianGroup = +-isAbelianGroup })
+    using () renaming (⁻¹-involutive to -‿involutive)
+
+  ----------------------------------------------------------------------
+  -- Distributivity
+
+  -- Various lemmas used to prove distributivity.
+
+  sign-⊖-< : ∀ {m n} → m ℕ< n → sign (m ⊖ n) ≡ Sign.-
+  sign-⊖-< {zero}  (s≤s z≤n) = refl
+  sign-⊖-< {suc n} (s≤s m<n) = sign-⊖-< m<n
+
+  sign-⊖-≱ : ∀ {m n} → m ≱ n → sign (m ⊖ n) ≡ Sign.-
+  sign-⊖-≱ = sign-⊖-< ∘ ℕ.≰⇒>
+
+  +-⊖-left-cancel : ∀ a b c → (a ℕ+ b) ⊖ (a ℕ+ c) ≡ b ⊖ c
+  +-⊖-left-cancel zero    b c = refl
+  +-⊖-left-cancel (suc a) b c = +-⊖-left-cancel a b c
+
+  ⊖-swap : ∀ a b → a ⊖ b ≡ - (b ⊖ a)
+  ⊖-swap zero    zero    = refl
+  ⊖-swap (suc _) zero    = refl
+  ⊖-swap zero    (suc _) = refl
+  ⊖-swap (suc a) (suc b) = ⊖-swap a b
+
+  -- Lemmas relating _⊖_ and _∸_.
+
+  ∣⊖∣-< : ∀ {m n} → m ℕ< n → ∣ m ⊖ n ∣ ≡ n ∸ m
+  ∣⊖∣-< {zero}  (s≤s z≤n) = refl
+  ∣⊖∣-< {suc n} (s≤s m<n) = ∣⊖∣-< m<n
+
+  ∣⊖∣-≱ : ∀ {m n} → m ≱ n → ∣ m ⊖ n ∣ ≡ n ∸ m
+  ∣⊖∣-≱ = ∣⊖∣-< ∘ ℕ.≰⇒>
+
+  ∣⊖∣-≤ : ∀ {m n} → m ℕ≤ n → + ∣ m ⊖ n ∣ ≡ n ⊖ m
+  ∣⊖∣-≤ {zero} {zero} (z≤n) = refl
+  ∣⊖∣-≤ {zero} {suc n} (z≤n) = refl
+  ∣⊖∣-≤ {suc n} (s≤s m≤n) = ∣⊖∣-≤ m≤n
+
+  ⊖-≥ : ∀ {m n} → m ≥ n → m ⊖ n ≡ + (m ∸ n)
+  ⊖-≥ z≤n       = refl
+  ⊖-≥ (s≤s n≤m) = ⊖-≥ n≤m
+
+  ⊖-< : ∀ {m n} → m ℕ< n → m ⊖ n ≡ - + (n ∸ m)
+  ⊖-< {zero}  (s≤s z≤n) = refl
+  ⊖-< {suc m} (s≤s m<n) = ⊖-< m<n
+
+  ⊖-≱ : ∀ {m n} → m ≱ n → m ⊖ n ≡ - + (n ∸ m)
+  ⊖-≱ = ⊖-< ∘ ℕ.≰⇒>
+
+  -- Lemmas working around the fact that _◃_ pattern matches on its
+  -- second argument before its first.
+
+  +‿◃ : ∀ n → Sign.+ ◃ n ≡ + n
+  +‿◃ zero    = refl
+  +‿◃ (suc _) = refl
+
+  -‿◃ : ∀ n → Sign.- ◃ n ≡ - + n
+  -‿◃ zero    = refl
+  -‿◃ (suc _) = refl
+
+  -- The main distributivity proof.
+
+  distrib-lemma :
+    ∀ a b c → (c ⊖ b) * -[1+ a ] ≡ a ℕ+ b ℕ* suc a ⊖ (a ℕ+ c ℕ* suc a)
+  distrib-lemma a b c
+    rewrite +-⊖-left-cancel a (b ℕ* suc a) (c ℕ* suc a)
+          | ⊖-swap (b ℕ* suc a) (c ℕ* suc a)
+    with b ≤? c
+  ... | yes b≤c
+    rewrite ⊖-≥ b≤c
+          | ⊖-≥ (b≤c *-mono (≤-refl {x = suc a}))
+          | -‿◃ ((c ∸ b) ℕ* suc a)
+          | ℕ.*-distrib-∸ʳ (suc a) c b
+          = refl
+  ... | no b≰c
+    rewrite sign-⊖-≱ b≰c
+          | ∣⊖∣-≱ b≰c
+          | +‿◃ ((b ∸ c) ℕ* suc a)
+          | ⊖-≱ (b≰c ∘ ℕ.cancel-*-right-≤ b c a)
+          | -‿involutive (+ (b ℕ* suc a ∸ c ℕ* suc a))
+          | ℕ.*-distrib-∸ʳ (suc a) b c
+          = refl
+
+  distribʳ : _*_ DistributesOverʳ _+_
+
+  distribʳ (+ zero) y z
+    rewrite proj₂ *-zero ∣ y ∣
+          | proj₂ *-zero ∣ z ∣
+          | proj₂ *-zero ∣ y + z ∣
+          = refl
+
+  distribʳ x (+ zero) z
+    rewrite proj₁ +-identity z
+          | proj₁ +-identity (sign z S* sign x ◃ ∣ z ∣ ℕ* ∣ x ∣)
+          = refl
+
+  distribʳ x y (+ zero)
+    rewrite proj₂ +-identity y
+          | proj₂ +-identity (sign y S* sign x ◃ ∣ y ∣ ℕ* ∣ x ∣)
+          = refl
+
+  distribʳ -[1+ a ] -[1+ b ] -[1+ c ] = cong +_ $
+    solve 3 (λ a b c → (con 2 :+ b :+ c) :* (con 1 :+ a)
+                    := (con 1 :+ b) :* (con 1 :+ a) :+
+                       (con 1 :+ c) :* (con 1 :+ a))
+            refl a b c
+
+  distribʳ (+ suc a) (+ suc b) (+ suc c) = cong +_ $
+    solve 3 (λ a b c → (con 1 :+ b :+ (con 1 :+ c)) :* (con 1 :+ a)
+                    := (con 1 :+ b) :* (con 1 :+ a) :+
+                       (con 1 :+ c) :* (con 1 :+ a))
+          refl a b c
+
+  distribʳ -[1+ a ] (+ suc b) (+ suc c) = cong -[1+_] $
+    solve 3 (λ a b c → a :+ (b :+ (con 1 :+ c)) :* (con 1 :+ a)
+                     := (con 1 :+ b) :* (con 1 :+ a) :+
+                        (a :+ c :* (con 1 :+ a)))
+           refl a b c
+
+  distribʳ (+ suc a) -[1+ b ] -[1+ c ] = cong -[1+_] $
+    solve 3 (λ a b c → a :+ (con 1 :+ a :+ (b :+ c) :* (con 1 :+ a))
+                    := (con 1 :+ b) :* (con 1 :+ a) :+
+                       (a :+ c :* (con 1 :+ a)))
+           refl a b c
+
+  distribʳ -[1+ a ] -[1+ b ] (+ suc c) = distrib-lemma a b c
+
+  distribʳ -[1+ a ] (+ suc b) -[1+ c ] = distrib-lemma a c b
+
+  distribʳ (+ suc a) -[1+ b ] (+ suc c)
+    rewrite +-⊖-left-cancel a (c ℕ* suc a) (b ℕ* suc a)
+    with b ≤? c
+  ... | yes b≤c
+    rewrite ⊖-≥ b≤c
+          | +-comm (- (+ (a ℕ+ b ℕ* suc a))) (+ (a ℕ+ c ℕ* suc a))
+          | ⊖-≥ (b≤c *-mono ≤-refl {x = suc a})
+          | ℕ.*-distrib-∸ʳ (suc a) c b
+          | +‿◃ (c ℕ* suc a ∸ b ℕ* suc a)
+          = refl
+  ... | no b≰c
+    rewrite sign-⊖-≱ b≰c
+          | ∣⊖∣-≱ b≰c
+          | -‿◃ ((b ∸ c) ℕ* suc a)
+          | ⊖-≱ (b≰c ∘ ℕ.cancel-*-right-≤ b c a)
+          | ℕ.*-distrib-∸ʳ (suc a) b c
+          = refl
+
+  distribʳ (+ suc c) (+ suc a) -[1+ b ]
+    rewrite +-⊖-left-cancel c (a ℕ* suc c) (b ℕ* suc c)
+    with b ≤? a
+  ... | yes b≤a
+    rewrite ⊖-≥ b≤a
+          | ⊖-≥ (b≤a *-mono ≤-refl {x = suc c})
+          | +‿◃ ((a ∸ b) ℕ* suc c)
+          | ℕ.*-distrib-∸ʳ (suc c) a b
+          = refl
+  ... | no b≰a
+    rewrite sign-⊖-≱ b≰a
+          | ∣⊖∣-≱ b≰a
+          | ⊖-≱ (b≰a ∘ ℕ.cancel-*-right-≤ b a c)
+          | -‿◃ ((b ∸ a) ℕ* suc c)
+          | ℕ.*-distrib-∸ʳ (suc c) b a
+          = refl
+
+  -- The IsCommutativeSemiring module contains a proof of
+  -- distributivity which is used below.
+
+  isCommutativeSemiring : IsCommutativeSemiring _≡_ _+_ _*_ (+ 0) (+ 1)
+  isCommutativeSemiring = record
+    { +-isCommutativeMonoid = +-isCommutativeMonoid
+    ; *-isCommutativeMonoid = *-isCommutativeMonoid
+    ; distribʳ              = distribʳ
+    ; zeroˡ                 = λ _ → refl
+    }
+
+commutativeRing : CommutativeRing _ _
+commutativeRing = record
+  { Carrier           = ℤ
+  ; _≈_               = _≡_
+  ; _+_               = _+_
+  ; _*_               = _*_
+  ; -_                = -_
+  ; 0#                = + 0
+  ; 1#                = + 1
+  ; isCommutativeRing = record
+    { isRing = record
+      { +-isAbelianGroup = +-isAbelianGroup
+      ; *-isMonoid       = *-isMonoid
+      ; distrib          = IsCommutativeSemiring.distrib
+                             isCommutativeSemiring
+      }
+    ; *-comm = *-comm
+    }
+  }
+
+import Algebra.RingSolver.Simple as Solver
+import Algebra.RingSolver.AlmostCommutativeRing as ACR
+module RingSolver =
+  Solver (ACR.fromCommutativeRing commutativeRing) _≟_
+
+------------------------------------------------------------------------
+-- More properties
+
+-swap : (a b : ℤ) -> (- (a - b) ≡ b - a)
+-swap -[1+ n ] -[1+ n₁ ] = sym (⊖-swap n n₁)
+-swap -[1+ n ] (+ zero) = refl
+-swap -[1+ n ] (+ suc n₁) = trans (cong (λ a -> + suc (suc a)) 
+  (ℕ+-comm n n₁)) (cong +_ (sym (+-suc (suc n₁) n)))
+-swap (+ zero) -[1+ n₁ ] = refl
+-swap (+ suc n) -[1+ n₁ ] = cong -[1+_] (ℕ+-comm n (suc n₁))
+-swap (+ zero) (+ zero) = refl
+-swap (+ zero) (+ suc n₁) = cong +_ (sym (+-right-identity (suc n₁)))
+-swap (+ suc n) (+ zero) = cong -[1+_] (+-right-identity n)
+-swap (+ suc n) (+ suc n₁) = sym (⊖-swap n₁ n)
+
+≤⇒pred≤ : ∀ m n → ℤsuc m ≤ n → m ≤ n
+≤⇒pred≤ -[1+ zero ] -[1+ n₁ ] ()
+≤⇒pred≤ -[1+ suc n ] -[1+ n₁ ] (-≤- le) = -≤- (≤-step le)
+≤⇒pred≤ -[1+ zero ] (+ n₁) le = -≤+
+≤⇒pred≤ -[1+ suc n ] (+ n₁) le = -≤+
+≤⇒pred≤ (+ n) -[1+ n₁ ] ()
+≤⇒pred≤ (+ zero) (+ n₁) le = +≤+ z≤n
+≤⇒pred≤ (+ suc n) (+ n₁) (+≤+ le) = +≤+ (ℕ≤⇒pred≤ (suc (suc n)) n₁ le)
+
+≰⇒> : _≰_ ⇒ _>_
+≰⇒> { -[1+ n ]} { -[1+ zero ]} p = ⊥-elim (p (-≤- z≤n))
+≰⇒> { -[1+ zero ]} { -[1+ suc n₁ ]} p = -≤- z≤n
+≰⇒> { -[1+ suc n ]} { -[1+ suc n₁ ]} p = -≤- (ℕ≰⇒> {n₁} {n}
+  (p ∘ (λ x → -≤- (s≤s x))))
+≰⇒> { -[1+ n ]} {+ n₁} p = ⊥-elim (p (-≤+))
+≰⇒> {+ n} { -[1+ zero ]} p = +≤+ z≤n
+≰⇒> {+ n} { -[1+ suc n₁ ]} p = -≤+
+≰⇒> {+ zero} {+ n} p = ⊥-elim (p (+≤+ z≤n))
+≰⇒> {+ suc n} {+ zero} p = +≤+ (s≤s z≤n)
+≰⇒> {+ suc n} {+ suc n₁} p = +≤+ (s≤s (ℕ≰⇒> {n} {n₁}
+  (p ∘ (λ x → +≤+ (s≤s x)))))
+
+∣-∣-≤ : ∀ {m n} → m ≤ n → (+ ∣ m - n ∣ ≡ n - m)
+∣-∣-≤ { -[1+ n ]} {+ zero} -≤+ = refl
+∣-∣-≤ { -[1+ m ]} {+ suc n} -≤+ = trans (trans (cong (λ a -> +
+    ∣ -[1+ a ] ∣) (sym (+-suc m n))) (cong +_ (abs {m ℕ+ suc n})) )
+    (cong +_ (sym (ℕ+-comm (suc n) (suc m))))
+∣-∣-≤ { -[1+ m ]} { -[1+ n ] } (-≤- n≤m) = ∣⊖∣-≤ n≤m
+∣-∣-≤ {+ zero} {+ zero} (+≤+ z≤s) = refl
+∣-∣-≤ {+ zero} {+ suc n} (+≤+ z≤s) = trans (cong +_ (abs {n}))
+    (cong +_ (sym (+-right-identity (suc n))))
+∣-∣-≤ {+ suc m} {+ zero} (+≤+ ())
+∣-∣-≤ {+ suc m} {+ suc n} (+≤+ m≤n) = (∣⊖∣-≤ {suc m}{suc n} (m≤n))
+
+-- Multiplication is right cancellative for non-zero integers.
+
+cancel-*-right : ∀ i j k →
+                 k ≢ + 0 → i * k ≡ j * k → i ≡ j
+cancel-*-right i j k            ≢0 eq with signAbs k
+cancel-*-right i j .(+ 0)       ≢0 eq | s ◂ zero  = contradiction refl ≢0
+cancel-*-right i j .(s ◃ suc n) ≢0 eq | s ◂ suc n
+  with ∣ s ◃ suc n ∣ | abs-◃ s (suc n) | sign (s ◃ suc n) | sign-◃ s n
+...  | .(suc n)      | refl            | .s               | refl =
+  ◃-cong (sign-i≡sign-j i j eq) $
+         ℕ.cancel-*-right ∣ i ∣ ∣ j ∣ $ abs-cong eq
+  where
+  sign-i≡sign-j : ∀ i j →
+                  sign i S* s ◃ ∣ i ∣ ℕ* suc n ≡
+                  sign j S* s ◃ ∣ j ∣ ℕ* suc n →
+                  sign i ≡ sign j
+  sign-i≡sign-j i              j              eq with signAbs i | signAbs j
+  sign-i≡sign-j .(+ 0)         .(+ 0)         eq | s₁ ◂ zero   | s₂ ◂ zero   = refl
+  sign-i≡sign-j .(+ 0)         .(s₂ ◃ suc n₂) eq | s₁ ◂ zero   | s₂ ◂ suc n₂
+    with ∣ s₂ ◃ suc n₂ ∣ | abs-◃ s₂ (suc n₂)
+  ... | .(suc n₂) | refl
+    with abs-cong {s₁} {sign (s₂ ◃ suc n₂) S* s} {0} {suc n₂ ℕ* suc n} eq
+  ...   | ()
+  sign-i≡sign-j .(s₁ ◃ suc n₁) .(+ 0)         eq | s₁ ◂ suc n₁ | s₂ ◂ zero
+    with ∣ s₁ ◃ suc n₁ ∣ | abs-◃ s₁ (suc n₁)
+  ... | .(suc n₁) | refl
+    with abs-cong {sign (s₁ ◃ suc n₁) S* s} {s₁} {suc n₁ ℕ* suc n} {0} eq
+  ...   | ()
+  sign-i≡sign-j .(s₁ ◃ suc n₁) .(s₂ ◃ suc n₂) eq | s₁ ◂ suc n₁ | s₂ ◂ suc n₂
+    with ∣ s₁ ◃ suc n₁ ∣ | abs-◃ s₁ (suc n₁)
+       | sign (s₁ ◃ suc n₁) | sign-◃ s₁ n₁
+       | ∣ s₂ ◃ suc n₂ ∣ | abs-◃ s₂ (suc n₂)
+       | sign (s₂ ◃ suc n₂) | sign-◃ s₂ n₂
+  ... | .(suc n₁) | refl | .s₁ | refl | .(suc n₂) | refl | .s₂ | refl =
+    SignProp.cancel-*-right s₁ s₂ (sign-cong eq)
+
+-- Multiplication with a positive number is right cancellative (for
+-- _≤_).
+
+cancel-*-+-right-≤ : ∀ m n o → m * + suc o ≤ n * + suc o → m ≤ n
+cancel-*-+-right-≤ (-[1+ m ]) (-[1+ n ]) o (-≤- n≤m) =
+  -≤- (≤-pred (ℕ.cancel-*-right-≤ (suc n) (suc m) o (s≤s n≤m)))
+cancel-*-+-right-≤ ℤ.-[1+ _ ] (+ _)      _ _         = -≤+
+cancel-*-+-right-≤ (+ 0)      ℤ.-[1+ _ ] _ ()
+cancel-*-+-right-≤ (+ suc _)  ℤ.-[1+ _ ] _ ()
+cancel-*-+-right-≤ (+ 0)      (+ 0)      _ _         = +≤+ z≤n
+cancel-*-+-right-≤ (+ 0)      (+ suc _)  _ _         = +≤+ z≤n
+cancel-*-+-right-≤ (+ suc _)  (+ 0)      _ (+≤+ ())
+cancel-*-+-right-≤ (+ suc m)  (+ suc n)  o (+≤+ m≤n) =
+  +≤+ (ℕ.cancel-*-right-≤ (suc m) (suc n) o m≤n)
+
+-- Multiplication with a positive number is monotone.
+
+*-+-right-mono : ∀ n → (λ x → x * + suc n) Preserves _≤_ ⟶ _≤_
+*-+-right-mono _ (-≤+             {n = 0})         = -≤+
+*-+-right-mono _ (-≤+             {n = suc _})     = -≤+
+*-+-right-mono x (-≤-                         n≤m) =
+  -≤- (≤-pred (s≤s n≤m *-mono ≤-refl {x = suc x}))
+*-+-right-mono _ (+≤+ {m = 0}     {n = 0}     m≤n) = +≤+ m≤n
+*-+-right-mono _ (+≤+ {m = 0}     {n = suc _} m≤n) = +≤+ z≤n
+*-+-right-mono _ (+≤+ {m = suc _} {n = 0}     ())
+*-+-right-mono x (+≤+ {m = suc _} {n = suc _} m≤n) =
+  +≤+ (m≤n *-mono ≤-refl {x = suc x})
+
+_+-mono_ :  _+_ Preserves₂ _≤_ ⟶ _≤_ ⟶ _≤_
+-≤+ +-mono -≤+ = -≤+
+-≤+ {n} {zero} +-mono -≤- {m} {zero} m₁≤n₁ = -≤- z≤n
+-≤+ +-mono -≤- {zero} {suc n} ()
+-≤+ {zero} {zero} +-mono -≤- {suc m} {suc n} m₁≤n₁ =
+  -≤- (z≤n {suc zero} ℕ.+-mono m₁≤n₁)
+-≤+ {m} {suc n} +-mono -≤- {m₁} {zero} m₁≤n₁ = -≤+
+-≤+ {zero} {suc n} +-mono -≤- {suc m} {suc n₁} (s≤s m₁≤n₁) =
+  -≤+ {suc zero} {n} +-mono -≤- {m} {n₁} (m₁≤n₁)
+-≤+ {suc m} {zero} +-mono -≤- {suc m₁} {suc n} m₁≤n₁ =
+  -≤- (≤-steps (suc (suc m)) m₁≤n₁)
+-≤+ {suc m} {suc n} +-mono -≤- {suc m₁} {suc n₁} (s≤s m₁≤n₁) =
+  -≤+ {suc m} {n} +-mono -≤- {suc m₁} {n₁} (≤-step m₁≤n₁)
+-≤+ +-mono +≤+ {zero} {n₁} m≤n = -≤+
+-≤+ +-mono +≤+ {suc m₁} {zero} () 
+-≤+ {zero} {n} +-mono +≤+ {suc m₁} {suc n₁} (s≤s m≤n) =
+  +≤+ (≤-steps n (≤-step m≤n))
+-≤+ {suc m} {n} +-mono +≤+ {suc m₁} {suc n₁} (s≤s m≤n) =
+  -≤+ {m}{n} +-mono +≤+ {m₁}{suc n₁} (≤-step m≤n)
+-≤- {m} {zero} n≤m +-mono -≤+ {n₁} {zero} = -≤- z≤n
+-≤- {m} {zero} n≤m +-mono -≤+ {n₁} {suc n} = -≤+
+-≤- {zero} {suc n}() +-mono -≤+
+-≤- {suc m} {suc n} n≤m +-mono -≤+ {zero} {zero} =
+  -≤- (subst₂ (λ a b -> a ℕ≤ suc b) (+-right-identity (suc n))
+    (+-suc m zero) (n≤m ℕ.+-mono z≤n {suc zero}))
+-≤- {suc m} {suc n} (s≤s n≤m) +-mono -≤+ {m₁} {suc n₁} =
+  -≤- {suc m} {n} (≤-step n≤m) +-mono -≤+ {m₁}{n₁}
+-≤- {suc m} {suc n} (s≤s n≤m) +-mono -≤+ {m₁} {zero} =
+  -≤- (subst (λ a -> suc n ℕ≤ suc (suc a)) (ℕ+-comm m₁ m)
+    (s≤s (≤-step (≤-steps m₁ n≤m))))
+-≤- {m} {n}  n≤m +-mono -≤-  n≤m₁ = -≤- (s≤s (n≤m ℕ.+-mono n≤m₁))
+-≤- {zero} {zero} n≤m +-mono +≤+ {zero} {zero} m≤n = -≤- m≤n
+-≤- {m} {zero} n≤m +-mono +≤+ {zero} {suc n} m≤n = -≤+
+-≤-  n≤m +-mono +≤+ {suc m} {zero} ()
+-≤- {zero} {zero} n≤m +-mono +≤+ {suc m} {suc n} (s≤s m≤n) =
+  +≤+ m≤n
+-≤- {zero} {suc n} () +-mono +≤+ m≤n
+-≤- {suc m} {n} n≤m +-mono +≤+ {zero} {zero} m≤n = -≤- n≤m
+-≤- {suc m} {zero} z≤n +-mono +≤+ {suc m₁} {suc n} (s≤s m≤n) =
+  -≤+ {m} {zero} +-mono +≤+ {m₁} {n} m≤n
+-≤- {suc m} {suc n} (s≤s n≤m) +-mono +≤+ {zero} {suc n₁} m≤n =
+  -≤+ {zero}{n₁} +-mono -≤- n≤m
+-≤- {suc m} {suc n} (s≤s n≤m) +-mono +≤+ {suc m₁} {suc n₁} (s≤s m≤n) =
+  -≤- n≤m +-mono +≤+ m≤n
++≤+ {zero} {n} m≤n +-mono -≤+ = -≤+
++≤+ {suc m} {zero} () +-mono -≤+
++≤+ {suc m} {suc n} (s≤s m≤n) +-mono -≤+ {zero} {n₁} =
+  +≤+ (subst (λ a -> m ℕ≤ suc a) (ℕ+-comm n₁ n) (≤-steps (suc n₁) (m≤n)))
++≤+ {suc m} {suc n} (s≤s m≤n) +-mono -≤+ {suc m₁} {n₁} =
+  +≤+ {m} {suc n} (≤-step m≤n) +-mono -≤+ {m₁} {n₁}
++≤+ {zero} {zero} m≤n +-mono -≤- n≤m = -≤- n≤m
++≤+ {zero} {suc n} m≤n +-mono -≤- {n₁} {zero} n≤m = -≤+
++≤+ m≤n +-mono -≤- {zero} {suc n₁} ()
++≤+ {zero} {suc n} z≤n +-mono -≤- {suc m} {suc n₁} (s≤s n≤m) =
+  -≤+ {zero}{n} +-mono -≤- {m}{n₁} n≤m
++≤+ {suc m} {zero} () +-mono -≤- n≤m
++≤+ {suc m} {suc n} (s≤s m≤n) +-mono -≤- {zero} {zero} n≤m = +≤+ m≤n
++≤+ {suc m} {suc n} (s≤s m≤n) +-mono -≤- {suc m₁} {zero} z≤n =
+  -≤+ {m₁}{zero} +-mono +≤+ m≤n
++≤+ {suc m} {suc n} (s≤s m≤n) +-mono -≤- {suc m₁} {suc n₁} (s≤s n≤m) =
+  -≤- n≤m +-mono +≤+ m≤n
++≤+ m≤n +-mono +≤+ m≤n₁ = +≤+ (m≤n ℕ.+-mono m≤n₁)
+  \end{code}
+\subsection{Data/Rational.agda}
+\begin{code}
+
+------------------------------------------------------------------------
+-- The Agda standard library
+--
+-- Rational numbers
+------------------------------------------------------------------------
+
+module Data.Rational where
+
+import Data.Integer.Multiplication.Properties as Mul
+open import Algebra using (module CommutativeMonoid)
+import Data.Sign as S
+open import Data.Empty using (⊥)
+open import Data.Unit using (⊤; tt)
+import Data.Bool.Properties as Bool
+open import Function
+open import Data.Product
+open import Data.Integer as ℤ using (ℤ; +_; -[1+_]; _◃_; sign)
+import Data.Integer.Properties as ℤ
+open import Data.Nat.GCD
+open import Data.Nat.Divisibility as ℕDiv using (_∣_; divides; quotient)
+open import Data.Nat as ℕ using (ℕ; zero; suc)
+open import Data.Nat.Show renaming (show to ℕshow)
+open import Data.Sum
+open import Data.String using (String; _++_)
+import Level
+open import Relation.Nullary.Decidable
+open import Relation.Nullary
+open import Relation.Binary
+open import Relation.Binary.Core using (_≢_)
+open import Relation.Binary.PropositionalEquality as P using 
+  (_≡_; refl; subst; cong; cong₂)
+open import Data.Integer.Properties using (cancel-*-right)
+open P.≡-Reasoning
+open CommutativeMonoid Mul.commutativeMonoid
+  using ()
+  renaming (assoc to *-assoc; comm to *-comm; identity to *-identity
+           ; isCommutativeMonoid to *-isCommutativeMonoid
+           ; isMonoid to *-isMonoid
+           )
+
+infix  8 -_ 1/_
+infixl 7   _*_ _/_
+infixl 6  _+_ _-_
+
+------------------------------------------------------------------------
+-- The definition
+
+--Rational numbers 
+--Note that we do not require the arguments to be given in their reduced form
+
+record ℚ : Set where
+  constructor _÷suc_
+  field
+    numerator     : ℤ
+    denominator-1 : ℕ
+
+  denominator : ℤ
+  denominator = + suc denominator-1
+
+infixl 7 _÷_
+
+_÷_ : (n : ℤ) (d : ℕ) -> {≢0 : False (ℕ._≟_ d 0)} -> ℚ
+(n ÷ 0) {()}
+n ÷ (suc d) = n ÷suc d
+
+------------------------------------------------------------------------
+--  Functions for reducing rational numbers to their coprime form
+
+-- normalize takes two natural numbers, say 6 and 21 and their gcd 3, and
+-- returns them normalized as 2 and 7
+normalize : {m n g : ℕ} → 
+  {n≢0 : False (ℕ._≟_ n 0)} → {g≢0 : False (ℕ._≟_ g 0)} →
+            GCD m n g → ℚ
+normalize {m} {n} {0} {_} {()} _
+normalize {m} {.0} {ℕ.suc g} {()} {_}
+  (GCD.is (divides p m≡pg' , divides 0 refl) _)
+normalize {m} {n} {ℕ.suc g} {_} {_}
+  (GCD.is (divides p m≡pg' , divides (suc q) n≡qg') _) =
+    ((+ p) ÷suc q)
+
+--gcd that gives a proof that g is NonZero if one of its inputs are NonZero
+gcd≢0 : (m n : ℕ) → {n≢0 : False (ℕ._≟_ n 0)} → ∃ λ d → 
+  GCD m n d × (False (ℕ._≟_ d 0))
+gcd≢0 m n {m≢0} with gcd m n
+gcd≢0 m n {m≢0} | (0 , GCD.is (_ , 0n) _) with ℕDiv.0∣⇒≡0 0n
+gcd≢0 m .0 {()} | (0 , GCD.is (_ , 0n) _) | refl
+gcd≢0 m n {_} | (ℕ.suc d , G) = (ℕ.suc d , G , tt)
+
+--Unary negation
+-_ : ℚ → ℚ
+- n ÷suc d = (ℤ.- n) ÷suc d
+
+--Reduces a given rational number to its coprime form
+reduce : ℚ -> ℚ
+reduce ((+ 0) ÷suc d) = (+ 0 ÷ 1)
+reduce (-[1+ n ] ÷suc d) = 
+  - normalize {ℤ.∣ -[1+ n ] ∣} {suc d} {proj₁ (gcd≢0 (suc n) (suc d) {_})} {_}
+  {proj₂ (proj₂ (gcd≢0 (suc n) (suc d) {_}))} 
+  (proj₁( proj₂ (gcd≢0 (suc n) (suc d) {_})))
+reduce ((+ n) ÷suc d) = 
+  normalize {ℤ.∣ + n ∣} {suc d} {proj₁ (gcd≢0 n (suc d) {_})} {_} 
+  {proj₂ (proj₂ (gcd≢0 n (suc d) {_}))} 
+  (proj₁ (proj₂ (gcd≢0 n (suc d) {_})))
+
+------------------------------------------------------------------------------
+-- Operations on rationals: reciprocal, multiplication, addition
+
+-- reciprocal: requires a proof that the numerator is not zero
+
+1/_ : (p : ℚ) → {≢0 : False (ℕ._≟_ (ℤ.∣ ℚ.numerator p ∣) 0)} → ℚ
+1/_ ((+ 0) ÷suc d) {()}
+1/_ ((+ suc n) ÷suc d) = (+ suc d) ÷suc n
+1/_ (-[1+ n ] ÷suc d) = -[1+ d ] ÷suc n
+
+--Multiplication and addition
+
+_*_ : ℚ -> ℚ -> ℚ
+(n₁ ÷suc d₁) * (n₂ ÷suc d₂) = ((n₁ ℤ.* n₂) ÷ (suc d₁ ℕ.* suc d₂))
+
+_+_ :  ℚ -> ℚ -> ℚ
+(n₁ ÷suc d₁) + (n₂ ÷suc d₂) =  ((n₁ ℤ.* + (suc d₂)) ℤ.+ (n₂ ℤ.* + (suc  d₁))) 
+  ÷ ((suc d₁) ℕ.* (suc d₂))
+
+ -- subtraction and division
+
+_-_ : ℚ → ℚ → ℚ
+p₁ - p₂ = p₁ + (- p₂)
+
+_/_ : (p₁ p₂ : ℚ) → {≢0 : False (ℕ._≟_ ℤ.∣ ℚ.numerator p₂ ∣ 0)} → ℚ
+_/_ p₁ p₂ {≢0} = p₁ * (1/_ p₂ {≢0})
+
+
+--absolute value
+∣_∣ : ℚ -> ℚ
+∣ n ÷suc d ∣ = (+ ℤ.∣ n ∣) ÷suc d
+
+-- conventional printed representation
+
+show : ℚ → String
+show p = ℤ.show (ℚ.numerator p) ++ "/" ++ ℕshow (ℕ.suc (ℚ.denominator-1 p))
+
+------------------------------------------------------------------------
+-- Equality
+
+-- We define an equality relation on rational numbers in the conventional way
+
+infix 4 _≃_
+
+_≃_ : Rel ℚ Level.zero
+p ≃ q = numerator p ℤ.* (+ suc (denominator-1 q)) ≡
+        numerator q ℤ.* (+ suc (denominator-1 p))
+  where open ℚ
+
+≡⇒≃ : _≡_ ⇒ _≃_
+≡⇒≃ refl = refl
+
+--This is an equivalence relation
+isEquivalence : IsEquivalence _≃_
+isEquivalence = record {
+  refl = refl ;
+  sym = P.sym ;
+  trans = λ {a}{b}{c} -> trans {a}{b}{c}
+  }
+    where
+    trans : Transitive _≃_
+    trans {a ÷suc b} {f ÷suc g} {x ÷suc y} ag≃fb fy≃xg = 
+      cancel-*-right (a ℤ.* (+ suc y)) (x ℤ.* (+ suc b)) (+ suc g) (λ {()}) 
+        (P.trans ayg≃fby fby≃xbg)
+      where
+        agy≃fby : (a ℤ.* + suc g ℤ.* + suc y ≡ f ℤ.* + suc b ℤ.* + suc y)
+        agy≃fby = cong (λ j -> (j ℤ.* + suc y)) (ag≃fb)
+        ayg≃fby : (a ℤ.* + suc y ℤ.* + suc g ≡ f ℤ.* + suc b ℤ.* + suc y)
+        ayg≃fby = P.trans (*-assoc a (+ suc y) (+ suc g)) 
+          (P.trans (cong (λ j -> (a ℤ.* j )) (*-comm (+ suc y) (+ suc g))) 
+            (P.trans (P.sym (*-assoc a (+ suc g) (+ suc y))) agy≃fby))
+        fyb≃xgb : (f ℤ.* + suc y ℤ.* + suc b ≡ x ℤ.* + suc g ℤ.* + suc b)
+        fyb≃xgb = cong (λ j -> j ℤ.* (+ suc b)) fy≃xg
+        fby≃xgb : (f ℤ.* + suc b ℤ.* + suc y ≡ x ℤ.* + suc g ℤ.* + suc b)
+        fby≃xgb = P.trans (*-assoc f (+ suc b) (+ suc y)) 
+          (P.trans (cong (λ j -> (f ℤ.* j )) (*-comm (+ suc b) (+ suc y))) 
+            (P.trans (P.sym (*-assoc f (+ suc y) (+ suc b))) fyb≃xgb))
+        fby≃xbg : (f ℤ.* + suc b ℤ.* + suc y ≡ x ℤ.* + suc b ℤ.* + suc g)
+        fby≃xbg = P.trans (P.trans (fby≃xgb) (*-assoc x (+ suc g) (+ suc b))) 
+          (P.trans (cong (λ j -> (x ℤ.* j)) (*-comm (+ suc g) (+ suc b))) 
+            (P.sym (*-assoc x (+ suc b) (+ suc g))))
+
+
+------------------------------------------------------------------------
+--Equality is decidable
+
+infix 4 _≟_
+
+_≟_ : Decidable {A = ℚ} _≃_
+p ≟ q with ℚ.numerator p ℤ.* (+ suc (ℚ.denominator-1 q)) ℤ.≟
+            ℚ.numerator q ℤ.* (+ suc (ℚ.denominator-1 p))
+p ≟ q | yes pq≃qp = yes (pq≃qp)
+p ≟ q | no ¬pq≃qp = no (¬pq≃qp)
+
+--------------------------------------------------------------------------
+ -- Ordering
+
+infix 4 _≤_ _≤?_
+
+data _≤_ : ℚ → ℚ → Set where
+  *≤* : ∀ {p q} →
+        ℚ.numerator p ℤ.* (+ suc (ℚ.denominator-1 q)) ℤ.≤
+        ℚ.numerator q ℤ.* (+ suc (ℚ.denominator-1 p)) →
+        p ≤ q
+
+drop-*≤* : ∀ {p q} → p ≤ q →
+           ℚ.numerator p ℤ.* (+ suc (ℚ.denominator-1 q)) ℤ.≤
+           ℚ.numerator q ℤ.* (+ suc (ℚ.denominator-1 p))
+drop-*≤* (*≤* pq≤qp) = pq≤qp
+
+_≤?_ : Decidable _≤_
+p ≤? q with ℚ.numerator p ℤ.* (+ suc (ℚ.denominator-1 q)) ℤ.≤?
+            ℚ.numerator q ℤ.* (+ suc (ℚ.denominator-1 p))
+p ≤? q | yes pq≤qp = yes (*≤* pq≤qp)
+p ≤? q | no ¬pq≤qp = no (λ { (*≤* pq≤qp) → ¬pq≤qp pq≤qp })
+
+decTotalOrder : DecTotalOrder _ _ _
+decTotalOrder = record
+  { Carrier         = ℚ
+  ; _≈_             = _≃_
+  ; _≤_             = _≤_
+  ; isDecTotalOrder = record
+      { isTotalOrder = record
+          { isPartialOrder = record
+              { isPreorder = record
+                  { isEquivalence = isEquivalence
+                  ; reflexive     = refl′
+                  ; trans         = trans
+                  }
+                ; antisym = antisym
+              }
+          ; total = total
+          }
+      ; _≟_  = _≟_
+      ; _≤?_ = _≤?_
+      }
+  }
+  where
+  module ℤO = DecTotalOrder ℤ.decTotalOrder
+
+  refl′ : _≃_ ⇒ _≤_
+  refl′ p = *≤* (reflexive p)
+    where
+      open DecTotalOrder ℤ.decTotalOrder using (reflexive)
+
+  trans : Transitive _≤_
+  trans {i = p} {j = q} {k = r} (*≤* le₁) (*≤* le₂)
+    = *≤* (ℤ.cancel-*-+-right-≤ _ _ _
+            (lemma
+              (ℚ.numerator p) ((+ suc (ℚ.denominator-1 p)))
+              (ℚ.numerator q) ((+ suc (ℚ.denominator-1 q)))
+              (ℚ.numerator r) ((+ suc (ℚ.denominator-1 r)))
+              (ℤ.*-+-right-mono (ℚ.denominator-1 r) le₁)
+              (ℤ.*-+-right-mono (ℚ.denominator-1 p) le₂)))
+    where
+
+    lemma : ∀ n₁ d₁ n₂ d₂ n₃ d₃ →
+            n₁ ℤ.* d₂ ℤ.* d₃ ℤ.≤ n₂ ℤ.* d₁ ℤ.* d₃ →
+            n₂ ℤ.* d₃ ℤ.* d₁ ℤ.≤ n₃ ℤ.* d₂ ℤ.* d₁ →
+            n₁ ℤ.* d₃ ℤ.* d₂ ℤ.≤ n₃ ℤ.* d₁ ℤ.* d₂
+    lemma n₁ d₁ n₂ d₂ n₃ d₃
+      rewrite *-assoc n₁ d₂ d₃
+            | *-comm d₂ d₃
+            | P.sym (*-assoc n₁ d₃ d₂)
+            | *-assoc n₃ d₂ d₁
+            | *-comm d₂ d₁
+            | P.sym (*-assoc n₃ d₁ d₂)
+            | *-assoc n₂ d₁ d₃
+            | *-comm d₁ d₃
+            | P.sym (*-assoc n₂ d₃ d₁)
+            = ℤO.trans
+
+  antisym : Antisymmetric _≃_ _≤_
+  antisym (*≤* le₁) (*≤* le₂) = (ℤO.antisym le₁ le₂)
+
+  total : Total _≤_
+  total p q =
+    [ inj₁ ∘′ *≤* , inj₂ ∘′ *≤* ]′
+      (ℤO.total (ℚ.numerator p ℤ.* (+ suc (ℚ.denominator-1 q)))
+                (ℚ.numerator q ℤ.* (+ suc (ℚ.denominator-1 p))))
 \end{code}
-\end{enumerate}
+\subsection{Data/Rational/Properties.agda}
+\begin{code}
+module Data.Rational.Properties where
+
+open import Function
+open import Data.Sum
+open import Data.Empty
+open import Relation.Nullary.Core using (Dec; yes; no; ¬_)
+open import Relation.Nullary.Decidable
+open import Data.Rational as ℚ using (ℚ; -_ ; _*_; _÷suc_;
+  _-_; _+_; ∣_∣; decTotalOrder; _≤_; *≤* ; _≤?_; _÷_; _≃_;
+  isEquivalence; drop-*≤*; ≡⇒≃ )
+open import Level renaming (zero to Levelzero; suc to Levelsuc)
+open import Data.Integer as ℤ using (decTotalOrder; ℤ; +_ ;
+  -[1+_]; _≤?_; _⊖_; ◃-cong; ◃-left-inverse; sign; drop‿+≤+) renaming 
+  (_-_ to ℤ_-_; _+_ to _ℤ+_; _*_ to  _ℤ*_;_≤_ to ℤ_≤_; _<_ to _ℤ<_;
+   _>_ to _ℤ>_)
+open import Data.Nat as ℕ using (ℕ; suc; zero; pred; compare;
+  _∸_; s≤s; z≤n; _≥_; decTotalOrder)
+    renaming (_≤_ to ℕ_≤_; _≤?_ to _≤??_; _<_ to _ℕ<_)
+open import Data.Nat.Properties.Simple using (+-suc;
+  *-comm; +-right-identity; +-*-suc)
+  renaming (+-comm to ℕ+-comm)
+open import Relation.Binary.Core
+open import Data.Nat.Properties using (m≤m+n; ≤-steps;
+  ≤-step; ≤⇒pred≤; ≤pred⇒≤; pred-mono; n≤1+n; _*-mono_; 1+n≰n)
+  renaming (_+-mono_ to _ℕ+-mono_)
+import Relation.Binary.PreorderReasoning as Pre
+import Data.Integer.Addition.Properties as Add
+open import Relation.Binary.PropositionalEquality.Core
+  using (trans; subst)
+open import Algebra
+import Algebra.FunctionProperties
+open import Data.Integer.Properties using (commutativeRing; abs-◃;
+  *-+-right-mono; cancel-*-+-right-≤; n⊖n≡0; ∣-∣-≤)
+  renaming (_+-mono_ to _ℤ+-mono_; -swap to ℤ-swap; ≰⇒> to ℤ≰⇒>;
+  ≤⇒pred≤ to ℤ≤⇒pred≤)
+open import Relation.Binary.PropositionalEquality as P using (_≡_; refl; 
+  subst; cong; cong₂; subst₂)
+open import Data.Product
+open import Relation.Binary using (module DecTotalOrder)
+open CommutativeRing commutativeRing
+  using ()
+  renaming (distrib to ℤdistrib; +-assoc to ℤ+-assoc; *-assoc to ℤ*-assoc;
+  *-comm to ℤ*-comm; +-comm to ℤ+-comm; *-identity to ℤ*-identity)
+open CommutativeMonoid Add.commutativeMonoid
+  using ()
+  renaming (identity to ℤ+-identity)
+open DecTotalOrder ℕ.decTotalOrder using () renaming (refl to ≤-refl)
+
+open Algebra.FunctionProperties (_≃_)
+
+--Various properties of rational numbers
+_⁻¹ : (n : ℕ) -> {≢0 : False (ℕ._≟_ n 0)} -> ℚ
+(n ⁻¹) {≢0} = ((+ 1) ÷ n) {≢0}
+
+--Properties of addition on rationals
+
++-comm : Commutative _+_
++-comm (n₁ ÷suc d₁)(n₂ ÷suc d₂) = cong₂ ℤ._*_ (ℤ+-comm (n₁ ℤ.* + suc d₂)
+  (n₂ ℤ.* + suc d₁)) (ℤ*-comm (+ suc d₂)(+ suc d₁))
+
++-identity : Identity ((+ 0)÷suc 0) _+_
++-identity = (left-identity , right-identity)
+  where
+  open P.≡-Reasoning
+  open IsEquivalence ℚ.isEquivalence using ()
+      renaming (sym to ℚsym; trans to ℚtrans)
+
+  right-identity : RightIdentity  ((+ 0)÷suc 0) _+_
+  right-identity (n ÷suc d) = begin
+    (n ℤ.* (+ 1) ℤ.+ + 0 ℤ.* + suc d) ℤ.* + suc d  ≡⟨ cong (λ a -> a ℤ.* + suc d)
+      (proj₂ ℤ+-identity (n ℤ.* (+ 1))) ⟩
+    n ℤ.* (+ 1) ℤ.* + suc d ≡⟨ ℤ*-assoc n (+ 1) (+ suc d) ⟩
+    n ℤ.* (+ 1 ℤ.* + suc d) ≡⟨ cong (λ a -> n ℤ.* a) (ℤ*-comm (+ 1)(+ suc d)) ⟩
+    (n ℤ.* (+ suc d ℤ.* + 1) ∎)
+
+  left-identity : LeftIdentity ((+ 0)÷suc 0) _+_
+  left-identity q = ℚtrans {(+ 0)÷suc 0 + q}{q + (+ 0)÷suc 0}{q}
+    (+-comm ((+ 0)÷suc 0) q)(right-identity q)
+
++-assoc : Associative _+_
++-assoc (n₁ ÷suc d₁)  (n₂ ÷suc d₂) (n₃ ÷suc d₃) = begin
+  ((n₁ ℤ.* D₂ ℤ.+ n₂ ℤ.* D₁) ℤ.* D₃ ℤ.+ n₃ ℤ.* (D₁ ℤ.* D₂))
+  ℤ.* (D₁ ℤ.* (D₂ ℤ.* D₃)) ≡⟨ cong (λ a -> ((n₁ ℤ.* D₂ ℤ.+ n₂ ℤ.* D₁) ℤ.* D₃
+  ℤ.+ n₃ ℤ.* (D₁ ℤ.* D₂))ℤ.* a) (P.sym (ℤ*-assoc (D₁)(D₂)(D₃))) ⟩
+  ((n₁ ℤ.* D₂ ℤ.+ n₂ ℤ.* D₁) ℤ.* D₃ ℤ.+ n₃ ℤ.* (D₁ ℤ.* D₂)) ℤ.* den
+  ≡⟨ cong (λ a -> (a ℤ.+  n₃ ℤ.* (D₁ ℤ.* D₂)) ℤ.* den)
+  (proj₂ ℤdistrib D₃ (n₁ ℤ.* D₂) (n₂ ℤ.* D₁))⟩
+  (n₁ ℤ.* D₂ ℤ.* D₃ ℤ.+ n₂ ℤ.* D₁ ℤ.* D₃ ℤ.+ n₃ ℤ.* (D₁ ℤ.* D₂)) ℤ.* den
+  ≡⟨ cong (λ a -> a ℤ.* den) (ℤ+-assoc (n₁ ℤ.* D₂ ℤ.* D₃)
+    (n₂ ℤ.* D₁ ℤ.* D₃) (n₃ ℤ.* (D₁ ℤ.* D₂)))⟩
+  (n₁ ℤ.* D₂ ℤ.* D₃ ℤ.+ (n₂ ℤ.* D₁ ℤ.* D₃ ℤ.+ n₃ ℤ.* (D₁ ℤ.* D₂))) ℤ.* den
+  ≡⟨ cong₂ (λ a b -> (a ℤ.+ (n₂ ℤ.* D₁ ℤ.* D₃ ℤ.+ n₃ ℤ.* b)) ℤ.* den)
+    (ℤ*-assoc n₁ D₂ D₃) (ℤ*-comm D₁ D₂) ⟩
+  (n₁ ℤ.* (D₂ ℤ.* D₃) ℤ.+ (n₂ ℤ.* D₁ ℤ.* D₃ ℤ.+ n₃ ℤ.* (D₂ ℤ.* D₁))) ℤ.* den
+  ≡⟨ cong₂ (λ a b -> (n₁ ℤ.* (D₂ ℤ.* D₃) ℤ.+ (a ℤ.+ b)) ℤ.* den)
+    (ℤ*-assoc n₂ D₁ D₃) (P.sym (ℤ*-assoc n₃ D₂ D₁))⟩
+ (n₁ ℤ.* (D₂ ℤ.* D₃) ℤ.+ (n₂ ℤ.* (D₁ ℤ.* D₃) ℤ.+ n₃ ℤ.* D₂ ℤ.* D₁)) ℤ.* den
+ ≡⟨ cong (λ a -> (n₁ ℤ.* (D₂ ℤ.* D₃) ℤ.+ (n₂ ℤ.* a ℤ.+ n₃ ℤ.* D₂ ℤ.* D₁))
+ ℤ.* den) (ℤ*-comm D₁ D₃)  ⟩
+  (n₁ ℤ.* (D₂ ℤ.* D₃) ℤ.+ (n₂ ℤ.* (D₃ ℤ.* D₁) ℤ.+ n₃ ℤ.* D₂ ℤ.* D₁)) ℤ.*
+  den ≡⟨ cong (λ a -> (n₁ ℤ.* (D₂ ℤ.* D₃) ℤ.+ (a ℤ.+ n₃ ℤ.* D₂ ℤ.* D₁))
+    ℤ.* den) (P.sym (ℤ*-assoc n₂ D₃ D₁))  ⟩
+  (n₁ ℤ.* (D₂ ℤ.* D₃) ℤ.+ (n₂ ℤ.* D₃ ℤ.* D₁ ℤ.+ n₃ ℤ.* D₂ ℤ.* D₁)) ℤ.* den
+  ≡⟨ cong (λ a -> (n₁ ℤ.* (D₂ ℤ.* D₃) ℤ.+ a) ℤ.* den)
+    (P.sym (proj₂ ℤdistrib D₁ (n₂ ℤ.* D₃) (n₃ ℤ.* D₂)))⟩
+  (n₁ ℤ.* (D₂ ℤ.* D₃) ℤ.+ (n₂ ℤ.* D₃ ℤ.+ n₃ ℤ.* D₂) ℤ.* D₁) ℤ.* den ∎
+    where
+     open P.≡-Reasoning
+     den = (+ suc d₁ ℤ.* + suc d₂ ℤ.* + suc d₃)
+     D₁ = + suc d₁
+     D₂ = + suc d₂
+     D₃ = + suc d₃
+
+--Lemmas needed to show symmetry of the equivalence relation 
+--defined on the real numbers
+
+-swap : (x y : ℚ) -> (- (y - x) ≡ x - y)
+-swap (-[1+ n₁ ] ÷suc d₁) (-[1+ n₂ ] ÷suc d₂) = 
+  cong₂ (λ a b -> (a ÷suc (pred b))) 
+  (ℤ-swap (-[1+ n₂ ] ℤ.* + suc d₁) (-[1+ n₁ ] ℤ.* + suc d₂)) 
+  (*-comm (suc d₂) (suc d₁))
+-swap (-[1+ n₁ ] ÷suc d₁) ((+ zero) ÷suc d₂) = 
+  cong (λ a -> (-[1+ n₁ ] ℤ.* (+ suc d₂)) ℚ.÷suc (pred a))
+  (*-comm (suc d₂) (suc d₁))
+-swap (-[1+ n₁ ] ÷suc d₁) ((+ suc n₂) ÷suc d₂) = 
+  cong₂ (λ a b -> (a ÷suc (pred b))) 
+  (ℤ-swap (+ suc n₂ ℤ.* + suc d₁) (-[1+ n₁ ] ℤ.* + suc d₂)) 
+  (*-comm (suc d₂) (suc d₁))
+-swap ((+ zero) ÷suc d₁) (-[1+ n₂ ] ÷suc d₂) = 
+  cong₂ (λ a b -> (a ÷suc (pred b))) 
+  (ℤ-swap (-[1+ n₂ ] ℤ.* + suc d₁) (+ zero ℤ.* + suc d₂)) 
+  (*-comm (suc d₂) (suc d₁))
+-swap ((+ suc n₁) ÷suc d₁) (-[1+ n₂ ] ÷suc d₂) = 
+  cong₂ (λ a b -> (a ÷suc (pred b))) 
+  (ℤ-swap (-[1+ n₂ ] ℤ.* + suc d₁) (+ suc n₁ ℤ.* + suc d₂)) 
+  (*-comm (suc d₂) (suc d₁))
+-swap ((+ zero) ÷suc d₁) ((+ zero) ÷suc d₂) = 
+  cong (λ a -> ((+ zero) ÷suc (pred a)))
+  (*-comm (suc d₂) (suc d₁))
+-swap ((+ zero) ÷suc d₁) ((+ suc n₂) ÷suc d₂) = 
+  cong₂ (λ a b -> (a ÷suc (pred b))) 
+  (ℤ-swap (+ suc n₂ ℤ.* + suc d₁) (+ zero ℤ.* + suc d₂)) 
+  (*-comm (suc d₂) (suc d₁))
+-swap ((+ suc n) ÷suc d₁) ((+ zero) ÷suc d₂) = 
+  cong₂ (λ a b -> (a ÷suc (pred b))) 
+  (ℤ-swap (+ zero ℤ.* + suc d₁) (+ suc n ℤ.* + suc d₂)) 
+  (*-comm (suc d₂) (suc d₁))
+-swap ((+ suc n₁) ÷suc d₁) ((+ suc n₂) ÷suc d₂) = 
+  cong₂ (λ a b -> (a ÷suc (pred b))) 
+  (ℤ-swap (+ suc n₂ ℤ.* + suc d₁) (+ suc n₁ ℤ.* + suc d₂)) 
+  (*-comm (suc d₂) (suc d₁))
+
+ℚabs₁ : (x : ℚ) -> (∣ - x ∣ ≡ ∣ x ∣)
+ℚabs₁ (-[1+ n ] ÷suc d₁) = refl
+ℚabs₁ ((+ zero) ÷suc d₁) = refl
+ℚabs₁ ((+ suc n) ÷suc d₁) = refl
+
+ℚabs₂ : (x y : ℚ) -> (∣ x - y ∣ ≡ ∣ y - x ∣)
+ℚabs₂ x y = trans (cong ∣_∣ (P.sym (-swap x y) ))(ℚabs₁ (y - x))
+
+
+--Since the we have defined rationals without requiring coprimality, 
+--our equivalence relation ≈ is not synonymous with ≡ and therefore 
+--we cannot use subst or cong to modify expressions. 
+--Instead, we have to show that every function defined on rationals 
+--preserves the equality relation.
++-exist :  _+_ Preserves₂ _≃_ ⟶ _≃_ ⟶ _≃_
++-exist {p}{q}{x}{y} pq xy =  begin 
+  (pn ℤ.* xd ℤ.+ xn ℤ.* pd) ℤ.* (qd ℤ.* yd) 
+  ≡⟨ proj₂ ℤdistrib (qd ℤ.* yd) (pn ℤ.* xd) (xn ℤ.* pd)   ⟩
+  pn ℤ.* xd ℤ.* (qd ℤ.* yd) ℤ.+ xn ℤ.* pd ℤ.* (qd ℤ.* yd) 
+  ≡⟨ cong₂ ℤ._+_ (ℤ*-assoc pn xd (qd ℤ.* yd)) (ℤ*-assoc xn pd (qd ℤ.* yd)) ⟩
+  pn ℤ.* (xd ℤ.* (qd ℤ.* yd)) ℤ.+ xn ℤ.* (pd ℤ.* (qd ℤ.* yd)) 
+  ≡⟨ cong₂ (λ a b -> pn ℤ.* a ℤ.+ xn ℤ.* (pd ℤ.* b)) 
+    (P.sym (ℤ*-assoc xd qd yd)) (ℤ*-comm qd yd) ⟩
+  pn ℤ.* (xd ℤ.* qd ℤ.* yd) ℤ.+ xn ℤ.* (pd ℤ.* (yd ℤ.* qd)) 
+  ≡⟨ cong₂ (λ a b -> pn ℤ.* (a ℤ.* yd) ℤ.+ xn ℤ.* b) 
+    (ℤ*-comm xd qd) (P.sym (ℤ*-assoc pd yd qd)) ⟩
+  pn ℤ.* (qd ℤ.* xd ℤ.* yd) ℤ.+ xn ℤ.* (pd ℤ.* yd ℤ.* qd) 
+  ≡⟨ cong₂ (λ a b -> pn ℤ.* a ℤ.+ xn ℤ.* (b ℤ.* qd)) 
+    (ℤ*-assoc qd xd yd) (ℤ*-comm pd yd) ⟩
+  pn ℤ.* (qd ℤ.* (xd ℤ.* yd)) ℤ.+ xn ℤ.* (yd ℤ.* pd ℤ.* qd) 
+  ≡⟨ cong₂ (λ a b -> a ℤ.+ xn ℤ.* b) 
+    (P.sym (ℤ*-assoc pn qd (xd ℤ.* yd))) (ℤ*-assoc yd pd qd) ⟩
+  pn ℤ.* qd ℤ.* (xd ℤ.* yd) ℤ.+ xn ℤ.* (yd ℤ.* (pd ℤ.* qd)) 
+  ≡⟨ cong₂ (λ a b -> a ℤ.* (xd ℤ.* yd) ℤ.+ b) pq  
+    (P.sym (ℤ*-assoc xn yd (pd ℤ.* qd))) ⟩
+  qn ℤ.* pd ℤ.* (xd ℤ.* yd) ℤ.+ xn ℤ.* yd ℤ.* (pd ℤ.* qd) 
+  ≡⟨ cong₂ (λ a b -> a ℤ.+ b ℤ.* (pd ℤ.* qd)) 
+    (ℤ*-assoc qn pd (xd ℤ.* yd)) xy ⟩
+  qn ℤ.* (pd ℤ.* (xd ℤ.* yd)) ℤ.+ yn ℤ.* xd ℤ.* (pd ℤ.* qd) 
+  ≡⟨ cong₂ (λ a b -> qn ℤ.* (pd ℤ.* a) ℤ.+ yn ℤ.* xd ℤ.* b) 
+    (ℤ*-comm xd yd) (ℤ*-comm pd qd) ⟩
+  qn ℤ.* (pd ℤ.* (yd ℤ.* xd)) ℤ.+ yn ℤ.* xd ℤ.* (qd ℤ.* pd) 
+  ≡⟨ cong₂ (λ a b -> qn ℤ.* a ℤ.+ b) 
+    (P.sym (ℤ*-assoc pd yd xd )) (ℤ*-assoc yn xd (qd ℤ.* pd)) ⟩
+  qn ℤ.* (pd ℤ.* yd ℤ.* xd) ℤ.+ yn ℤ.* (xd ℤ.* (qd ℤ.* pd)) 
+  ≡⟨ cong₂ (λ a b -> qn ℤ.* (a ℤ.* xd) ℤ.+ yn ℤ.* b) 
+    (ℤ*-comm pd yd) (P.sym (ℤ*-assoc xd qd pd )) ⟩
+  qn ℤ.* (yd ℤ.* pd ℤ.* xd) ℤ.+ yn ℤ.* (xd ℤ.* qd ℤ.* pd) 
+  ≡⟨ cong₂ (λ a b -> qn ℤ.* a ℤ.+ yn ℤ.* (b ℤ.* pd)) 
+    (ℤ*-assoc yd pd xd) (ℤ*-comm xd qd) ⟩
+  qn ℤ.* (yd ℤ.* (pd ℤ.* xd)) ℤ.+ yn ℤ.* (qd ℤ.* xd ℤ.* pd) 
+  ≡⟨ cong₂ (λ a b -> a ℤ.+ yn ℤ.* b) 
+    (P.sym (ℤ*-assoc qn yd (pd ℤ.* xd))) (ℤ*-assoc qd xd pd) ⟩
+  qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* (qd ℤ.* (xd ℤ.* pd)) 
+  ≡⟨ cong (λ a -> qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* (qd ℤ.* a)) 
+    (ℤ*-comm xd pd) ⟩
+  qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* (qd ℤ.* (pd ℤ.* xd)) 
+  ≡⟨ cong (λ a -> qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ a) 
+    (P.sym (ℤ*-assoc yn qd (pd ℤ.* xd))) ⟩
+  qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* qd ℤ.* (pd ℤ.* xd) 
+  ≡⟨ P.sym (proj₂ ℤdistrib (pd ℤ.* xd) (qn ℤ.* yd) (yn ℤ.* qd)) ⟩
+  (qn ℤ.* yd ℤ.+ yn ℤ.* qd) ℤ.* (pd ℤ.* xd)
+        ∎
+         where
+           open P.≡-Reasoning
+           pn = ℚ.numerator p
+           pd = ℚ.denominator p
+           qn = ℚ.numerator q
+           qd = ℚ.denominator q
+           xn = ℚ.numerator x
+           xd = ℚ.denominator x
+           yn = ℚ.numerator y
+           yd = ℚ.denominator y
+
++-red₁ : (n : ℕ) -> 
+  ((+ 1) ÷suc (suc (n ℕ.+ n)) ℚ.+ 
+  (+ 1) ÷suc (suc (n ℕ.+ n)) ℚ.≃ (+ 1) ÷suc n)
++-red₁ n = begin 
+  ((+ 1) ℤ.* k ℤ.+ (+ 1) ℤ.* k) ℤ.* + suc n 
+  ≡⟨ cong (λ a -> ((a ℤ.+ a) ℤ.* + suc n)) (proj₁ ℤ*-identity k) ⟩
+  (k ℤ.+ k) ℤ.* + suc n 
+  ≡⟨ cong (λ a -> a ℤ.* + suc n) (P.sym (lem k)) ⟩
+  (+ 2) ℤ.* k ℤ.* (+ suc n) 
+  ≡⟨ cong (λ a -> a ℤ.* + suc n) (ℤ*-comm (+ 2) k) ⟩
+  k ℤ.* (+ 2) ℤ.* (+ suc n) 
+  ≡⟨ ℤ*-assoc k (+ 2) (+ suc n) ⟩
+  k ℤ.* ((+ 2) ℤ.* (+ suc n)) 
+  ≡⟨ cong (λ a -> k ℤ.* a) (lem (+ suc n)) ⟩
+  k ℤ.* (+ suc (n ℕ.+ suc n)) 
+  ≡⟨ cong (λ a -> k ℤ.* + suc a) (ℕ+-comm n (suc n)) ⟩
+  k ℤ.* k ≡⟨ P.sym (proj₁ ℤ*-identity (k ℤ.* k)) ⟩
+  (+ 1) ℤ.* (k ℤ.* k)
+  ∎
+    where
+      open P.≡-Reasoning
+      k = + suc (suc (n ℕ.+ n))
+      lem : (j : ℤ) -> ((+ 2) ℤ.* j ≡ j ℤ.+ j)
+      lem j = trans (proj₂ ℤdistrib j (+ 1) (+ 1)) 
+        (cong₂ ℤ._+_ (proj₁ ℤ*-identity j) (proj₁ ℤ*-identity j)) 
+
++-red₂ : (n : ℕ) -> 
+       (((+ 1) ÷suc (suc ((suc (n ℕ.+ n)) ℕ.+ (suc (n ℕ.+ n)))) +
+       (+ 1) ÷suc (suc ((suc (n ℕ.+ n)) ℕ.+ (suc (n ℕ.+ n))))) 
+      + 
+      ((+ 1) ÷suc (suc ((suc (n ℕ.+ n)) ℕ.+ (suc (n ℕ.+ n)))) +
+      (+ 1) ÷suc (suc ((suc (n ℕ.+ n)) ℕ.+ (suc (n ℕ.+ n))))) 
+      ℚ.≃ ((+ 1) ÷suc n))
++-red₂ n = ℚtrans {start} {middle}{end} 
+  (+-exist {1÷k + 1÷k}{1÷j}{1÷k + 1÷k}{1÷j} (+-red₁ j) (+-red₁ j)) 
+    (+-red₁ n)
+  where
+    open IsEquivalence ℚ.isEquivalence using ()
+      renaming (trans to ℚtrans)
+    j = suc (n ℕ.+ n)
+    k = suc (j ℕ.+ j)
+    1÷j = (+ 1) ÷suc j
+    1÷k = (+ 1) ÷suc k
+    start = (1÷k + 1÷k) + (1÷k + 1÷k)
+    middle = 1÷j + 1÷j
+    end = (+ 1) ÷suc n
+
+ℚ≤lem : {m n : ℕ} -> ((+ 1) ÷suc (m ℕ.+ n) ≤ (+ 1) ÷suc m)
+ℚ≤lem {m}{n} =  *≤* (ℤ.+≤+ (ℕ.s≤s ((m≤m+n m n) ℕ+-mono (z≤n))))
+
+_+-mono_ :  _+_ Preserves₂ _≤_ ⟶ _≤_ ⟶ _≤_
+_+-mono_ {p}{q}{x}{y} (*≤* pq) (*≤* xy) = *≤* (begin
+  (pn ℤ.* xd ℤ.+ xn ℤ.* pd) ℤ.* (qd ℤ.* yd)
+  ∼⟨ ≡⇒≤ (proj₂ ℤdistrib (qd ℤ.* yd) (pn ℤ.* xd) (xn ℤ.* pd))   ⟩
+  pn ℤ.* xd ℤ.* (qd ℤ.* yd) ℤ.+ xn ℤ.* pd ℤ.* (qd ℤ.* yd) 
+  ∼⟨ ≡⇒≤ (cong₂ ℤ._+_ (ℤ*-assoc pn xd (qd ℤ.* yd))
+    (ℤ*-assoc xn pd (qd ℤ.* yd))) ⟩
+  pn ℤ.* (xd ℤ.* (qd ℤ.* yd)) ℤ.+ xn ℤ.* (pd ℤ.* (qd ℤ.* yd)) 
+  ∼⟨ ≡⇒≤ (cong₂ (λ a b -> pn ℤ.* a ℤ.+ xn ℤ.* (pd ℤ.* b)) 
+    (P.sym (ℤ*-assoc xd qd yd)) (ℤ*-comm qd yd)) ⟩
+  pn ℤ.* (xd ℤ.* qd ℤ.* yd) ℤ.+ xn ℤ.* (pd ℤ.* (yd ℤ.* qd)) 
+  ∼⟨ ≡⇒≤ (cong₂ (λ a b -> pn ℤ.* (a ℤ.* yd) ℤ.+ xn ℤ.* b) 
+    (ℤ*-comm xd qd) (P.sym (ℤ*-assoc pd yd qd))) ⟩
+  pn ℤ.* (qd ℤ.* xd ℤ.* yd) ℤ.+ xn ℤ.* (pd ℤ.* yd ℤ.* qd) 
+  ∼⟨ ≡⇒≤ (cong₂ (λ a b -> pn ℤ.* a ℤ.+ xn ℤ.* (b ℤ.* qd)) 
+    (ℤ*-assoc qd xd yd) (ℤ*-comm pd yd)) ⟩
+  pn ℤ.* (qd ℤ.* (xd ℤ.* yd)) ℤ.+ xn ℤ.* (yd ℤ.* pd ℤ.* qd) 
+  ∼⟨ ≡⇒≤ (cong₂ (λ a b -> a ℤ.+ xn ℤ.* b) 
+    (P.sym (ℤ*-assoc pn qd (xd ℤ.* yd))) (ℤ*-assoc yd pd qd)) ⟩
+  pn ℤ.* qd ℤ.* (+ (suc xd-1 ℕ.* suc yd-1)) ℤ.+ xn ℤ.*
+    (yd ℤ.* (pd ℤ.* qd))
+  ∼⟨ (*-+-right-mono (yd-1 ℕ.+ xd-1 ℕ.* (suc yd-1)) pq)
+    ℤ+-mono
+    (≡⇒≤ (P.sym (ℤ*-assoc xn yd (pd ℤ.* qd)))) ⟩
+  qn ℤ.* pd ℤ.* (xd ℤ.* yd) ℤ.+ xn ℤ.* yd ℤ.* (pd ℤ.* qd) 
+  ∼⟨ (≡⇒≤ (ℤ*-assoc qn pd (xd ℤ.* yd))) ℤ+-mono
+    (*-+-right-mono (qd-1 ℕ.+ pd-1 ℕ.* (suc qd-1)) xy)  ⟩
+  qn ℤ.* (pd ℤ.* (xd ℤ.* yd)) ℤ.+ yn ℤ.* xd ℤ.* (pd ℤ.* qd) 
+  ∼⟨ ≡⇒≤ (cong₂ (λ a b -> qn ℤ.* (pd ℤ.* a) ℤ.+ yn ℤ.* xd ℤ.* b) 
+    (ℤ*-comm xd yd) (ℤ*-comm pd qd)) ⟩
+  qn ℤ.* (pd ℤ.* (yd ℤ.* xd)) ℤ.+ yn ℤ.* xd ℤ.* (qd ℤ.* pd) 
+  ∼⟨ ≡⇒≤ (cong₂ (λ a b -> qn ℤ.* a ℤ.+ b) 
+    (P.sym (ℤ*-assoc pd yd xd )) (ℤ*-assoc yn xd (qd ℤ.* pd))) ⟩
+  qn ℤ.* (pd ℤ.* yd ℤ.* xd) ℤ.+ yn ℤ.* (xd ℤ.* (qd ℤ.* pd)) 
+  ∼⟨ ≡⇒≤ (cong₂ (λ a b -> qn ℤ.* (a ℤ.* xd) ℤ.+ yn ℤ.* b) 
+    (ℤ*-comm pd yd) (P.sym (ℤ*-assoc xd qd pd ))) ⟩
+  qn ℤ.* (yd ℤ.* pd ℤ.* xd) ℤ.+ yn ℤ.* (xd ℤ.* qd ℤ.* pd) 
+  ∼⟨ ≡⇒≤ (cong₂ (λ a b -> qn ℤ.* a ℤ.+ yn ℤ.* (b ℤ.* pd)) 
+    (ℤ*-assoc yd pd xd) (ℤ*-comm xd qd)) ⟩
+  qn ℤ.* (yd ℤ.* (pd ℤ.* xd)) ℤ.+ yn ℤ.* (qd ℤ.* xd ℤ.* pd) 
+  ∼⟨ ≡⇒≤ (cong₂ (λ a b -> a ℤ.+ yn ℤ.* b) 
+    (P.sym (ℤ*-assoc qn yd (pd ℤ.* xd))) (ℤ*-assoc qd xd pd)) ⟩
+  qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* (qd ℤ.* (xd ℤ.* pd)) 
+  ∼⟨ ≡⇒≤ (cong (λ a -> qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* (qd ℤ.* a)) 
+    (ℤ*-comm xd pd)) ⟩
+  qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* (qd ℤ.* (pd ℤ.* xd)) 
+  ∼⟨ ≡⇒≤ (cong (λ a -> qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ a) 
+    (P.sym (ℤ*-assoc yn qd (pd ℤ.* xd)))) ⟩
+  qn ℤ.* yd ℤ.* (pd ℤ.* xd) ℤ.+ yn ℤ.* qd ℤ.* (pd ℤ.* xd) 
+  ∼⟨ ≡⇒≤ (P.sym (proj₂ ℤdistrib (pd ℤ.* xd) (qn ℤ.* yd) (yn ℤ.* qd))) ⟩
+  (qn ℤ.* yd ℤ.+ yn ℤ.* qd) ℤ.* (pd ℤ.* xd)
+        ∎)
+  where
+     open DecTotalOrder ℤ.decTotalOrder using (preorder)
+       renaming (reflexive to ≡⇒≤)
+     open Pre preorder
+     pn = ℚ.numerator p
+     pd = ℚ.denominator p
+     pd-1 = ℚ.denominator-1 p
+     qn = ℚ.numerator q
+     qd = ℚ.denominator q
+     qd-1 = ℚ.denominator-1 q
+     xn = ℚ.numerator x
+     xd = ℚ.denominator x
+     xd-1 = ℚ.denominator-1 x
+     yn = ℚ.numerator y
+     yd = ℚ.denominator y
+     yd-1 = ℚ.denominator-1 y
+
+ℚ≤-abs₁ : {x y : ℚ} -> (x ≤ y) -> (∣ x - y ∣ ℚ.≃ y - x)
+ℚ≤-abs₁ { -[1+ n₁ ] ÷suc d₁} { -[1+ n₂ ] ÷suc d₂} (*≤* p) = begin
+    + ℤ.∣ -[1+ n₁ ] ℤ.* + (suc d₂) ℤ.- (-[1+  n₂ ] ℤ.* + (suc d₁)) ∣
+    ℤ.* + ((suc d₂) ℕ.* (suc d₁)) ≡⟨ cong₂ (λ a b -> a ℤ.* + b)
+    (∣-∣-≤ { -[1+ n₁ ] ℤ.* + (suc d₂)}{ (-[1+  n₂ ] ℤ.* + (suc d₁))} p)
+    (*-comm (suc d₂)(suc d₁)) ⟩
+  ((-[1+  n₂ ] ℤ.* + (suc d₁) ℤ.- (-[1+ n₁ ] ℤ.* + (suc d₂))) ℤ.*
+  + ((suc d₁) ℕ.* (suc d₂)) ∎)
+     where
+     open P.≡-Reasoning
+ℚ≤-abs₁ {(+ zero) ÷suc d₁} { -[1+ n₂ ] ÷suc d₂} (*≤* p) = begin
+    + ℤ.∣ + zero ℤ.* + (suc d₂) ℤ.- (-[1+  n₂ ] ℤ.* + (suc d₁)) ∣
+    ℤ.* + ((suc d₂) ℕ.* (suc d₁)) ≡⟨ cong₂ (λ a b -> a ℤ.* + b)
+    (∣-∣-≤ { + zero ℤ.* + (suc d₂)}{ (-[1+  n₂ ] ℤ.* + (suc d₁))} p)
+    (*-comm (suc d₂)(suc d₁)) ⟩
+  ((-[1+  n₂ ] ℤ.* + (suc d₁) ℤ.- (+ zero ℤ.* + (suc d₂))) ℤ.*
+  + ((suc d₁) ℕ.* (suc d₂)) ∎)
+     where
+     open P.≡-Reasoning
+ℚ≤-abs₁ {(+ suc n) ÷suc d₁} { -[1+ n₂ ] ÷suc d₂} (*≤* p) = begin
+    + ℤ.∣ + suc n ℤ.* + (suc d₂) ℤ.- (-[1+  n₂ ] ℤ.* + (suc d₁))
+    ∣ ℤ.* + ((suc d₂) ℕ.* (suc d₁)) ≡⟨ cong₂ (λ a b -> a ℤ.* + b)
+    (∣-∣-≤ { + suc n ℤ.* + (suc d₂)}{ (-[1+  n₂ ] ℤ.* + (suc d₁))} p)
+    (*-comm (suc d₂)(suc d₁)) ⟩
+  ((-[1+  n₂ ] ℤ.* + (suc d₁) ℤ.- (+ suc n ℤ.* + (suc d₂))) ℤ.*
+  + ((suc d₁) ℕ.* (suc d₂)) ∎)
+     where
+     open P.≡-Reasoning
+ℚ≤-abs₁ { -[1+ n ] ÷suc d₁} {(+ zero) ÷suc d₂} (*≤* p) = begin
+    + ℤ.∣ -[1+ n ] ℤ.* + (suc d₂) ℤ.- (+ zero ℤ.* + (suc d₁)) ∣
+    ℤ.* + ((suc d₂) ℕ.* (suc d₁)) ≡⟨ cong₂ (λ a b -> a ℤ.* + b)
+    (∣-∣-≤ { -[1+ n ] ℤ.* + (suc d₂)}{ (+ zero ℤ.* + (suc d₁))} p)
+    (*-comm (suc d₂)(suc d₁)) ⟩
+  ((+ zero ℤ.* + (suc d₁) ℤ.- (-[1+ n ] ℤ.* + (suc d₂))) ℤ.*
+  + ((suc d₁) ℕ.* (suc d₂)) ∎)
+     where
+     open P.≡-Reasoning
+ℚ≤-abs₁ {(+ zero) ÷suc d₁} {(+ zero) ÷suc d₂} (*≤* p) = begin
+    + ℤ.∣ + zero ℤ.* + (suc d₂) ℤ.- (+ zero ℤ.* + (suc d₁)) ∣ ℤ.*
+    + ((suc d₂) ℕ.* (suc d₁)) ≡⟨ cong₂ (λ a b -> a ℤ.* + b)
+    (∣-∣-≤ { + zero ℤ.* + (suc d₂)}{ (+ zero ℤ.* + (suc d₁))} p)
+    (*-comm (suc d₂)(suc d₁)) ⟩
+  ((+ zero ℤ.* + (suc d₁) ℤ.- (+ zero ℤ.* + (suc d₂))) ℤ.*
+  + ((suc d₁) ℕ.* (suc d₂)) ∎)
+     where
+     open P.≡-Reasoning
+ℚ≤-abs₁ {(+ suc n) ÷suc d₁} {(+ zero) ÷suc d₂} (*≤* p) = begin
+    + ℤ.∣ + suc n ℤ.* + (suc d₂) ℤ.- (+ zero ℤ.* + (suc d₁)) ∣
+    ℤ.* + ((suc d₂) ℕ.* (suc d₁)) ≡⟨ cong₂ (λ a b -> a ℤ.* + b)
+    (∣-∣-≤ { + suc n ℤ.* + (suc d₂)}{ (+ zero ℤ.* + (suc d₁))} p)
+    (*-comm (suc d₂)(suc d₁)) ⟩
+  ((+ zero ℤ.* + (suc d₁) ℤ.- (+ suc n ℤ.* + (suc d₂))) ℤ.*
+  + ((suc d₁) ℕ.* (suc d₂)) ∎)
+     where
+     open P.≡-Reasoning
+ℚ≤-abs₁ { -[1+ n ] ÷suc d₁} {(+ suc n₁) ÷suc d₂} (*≤* p) = begin
+    + ℤ.∣ -[1+ n ] ℤ.* + (suc d₂) ℤ.- (+ suc n₁ ℤ.* + (suc d₁)) ∣
+    ℤ.* + ((suc d₂) ℕ.* (suc d₁)) ≡⟨ cong₂ (λ a b -> a ℤ.* + b)
+    (∣-∣-≤ { -[1+ n ] ℤ.* + (suc d₂)}{ (+ suc n₁ ℤ.* + (suc d₁))} p)
+    (*-comm (suc d₂)(suc d₁)) ⟩
+  ((+ suc n₁ ℤ.* + (suc d₁) ℤ.- (-[1+ n ] ℤ.* + (suc d₂))) ℤ.*
+  + ((suc d₁) ℕ.* (suc d₂)) ∎)
+     where
+     open P.≡-Reasoning
+ℚ≤-abs₁ {(+ zero) ÷suc d₁} {(+ suc n₁) ÷suc d₂} (*≤* p) = begin
+    + ℤ.∣ + zero ℤ.* + (suc d₂) ℤ.- (+ suc n₁ ℤ.* + (suc d₁)) ∣ ℤ.*
+    + ((suc d₂) ℕ.* (suc d₁)) ≡⟨ cong₂ (λ a b -> a ℤ.* + b)
+    (∣-∣-≤ { + zero ℤ.* + (suc d₂)}{ (+ suc n₁ ℤ.* + (suc d₁))} p)
+    (*-comm (suc d₂)(suc d₁)) ⟩
+  ((+ suc n₁ ℤ.* + (suc d₁) ℤ.- (+ zero ℤ.* + (suc d₂))) ℤ.*
+  + ((suc d₁) ℕ.* (suc d₂)) ∎)
+     where
+     open P.≡-Reasoning
+ℚ≤-abs₁ {(+ suc n) ÷suc d₁} {(+ suc n₁) ÷suc d₂} (*≤* p) = begin
+    + ℤ.∣ + suc n ℤ.* + (suc d₂) ℤ.- (+ suc n₁ ℤ.* + (suc d₁)) ∣
+    ℤ.* + ((suc d₂) ℕ.* (suc d₁)) ≡⟨ cong₂ (λ a b -> a ℤ.* + b)
+    (∣-∣-≤ { + suc n ℤ.* + (suc d₂)}{ (+ suc n₁ ℤ.* + (suc d₁))} p)
+    (*-comm (suc d₂)(suc d₁)) ⟩
+  ((+ suc n₁ ℤ.* + (suc d₁) ℤ.- (+ suc n ℤ.* + (suc d₂))) ℤ.*
+  + ((suc d₁) ℕ.* (suc d₂)) ∎)
+     where
+     open P.≡-Reasoning
+
+ℚ≤-abs₂ : {x y : ℚ} -> (x ≤ y) -> ∣ y - x ∣ ℚ.≃ y - x
+ℚ≤-abs₂ {x}{y} le = ℚtrans {∣ y - x ∣}{∣ x - y ∣}{y - x}
+  (≡⇒≃ (ℚabs₂ y x)) (ℚ≤-abs₁ le)
+  where
+  open IsEquivalence ℚ.isEquivalence using ()
+       renaming (trans to ℚtrans)
+
+x-x : {x : ℚ} -> (x - x ℚ.≃ (+ 0) ÷suc 0)
+x-x {(+ zero) ÷suc d} = refl
+x-x {(+ suc n) ÷suc d} = begin (+ suc n ℤ.* + suc d ℤ.-
+  + suc n ℤ.* + suc d) ℤ.* + 1
+    ≡⟨ cong (λ a -> a ℤ.* + 1) (n⊖n≡0 (suc n ℕ.* suc d))  ⟩
+    + 0 ∎
+    where
+      open P.≡-Reasoning
+x-x { -[1+ n ] ÷suc d} = begin (-[1+ n ] ℤ.* + suc d ℤ.-
+  -[1+ n ] ℤ.* + suc d) ℤ.* + 1
+    ≡⟨ cong (λ a -> a ℤ.* + 1) (n⊖n≡0 (suc n ℕ.* suc d))  ⟩
+    + 0 ∎
+    where
+      open P.≡-Reasoning
+
+data _<_ : ℚ → ℚ → Set where
+  *≤* : ∀ {p q} →
+        (ℚ.numerator p ℤ.* (+ suc (ℚ.denominator-1 q))) ℤ<
+        (ℚ.numerator q ℤ.* (+ suc (ℚ.denominator-1 p))) →
+        p < q
+
+_>_ : Rel ℚ Level.zero
+m > n = n < m
+
+_≰_ : Rel ℚ Level.zero
+a ≰ b = ¬ a ≤ b
+
+≰⇒> : _≰_ ⇒ _>_
+≰⇒> ¬p = *≤* (ℤ≰⇒> (λ z → ¬p (*≤* z)))
+
+<⇒≤ : _<_ ⇒ _≤_
+<⇒≤ (*≤* le) = *≤* (ℤ≤⇒pred≤ _ _ le)
+
+triang : (x y z : ℚ) -> (∣ x - z ∣ ≤ ∣ x - y ∣ + ∣ y - z ∣)
+triang x y z with x ℚ.≤? y | y ℚ.≤? z | x ℚ.≤? z
+triang x y z | yes p | yes p₁ | yes p₂ = begin
+  ∣ x - z ∣   ∼⟨ ≡⇒≤ (ℚ≤-abs₁ p₂)   ⟩
+  z - x ∼⟨ ≡⇒≤ (P.sym (proj₂ +-identity (z - x))) ⟩
+  (z - x) + ((+ 0) ÷suc 0) ∼⟨  ≡⇒≤ {(z - x)}{(z - x)} refl
+  +-mono ≡⇒≤ {(+ 0) ÷suc 0}{(y - y)}
+  (ℚsym {y - y}{(+ 0) ÷suc 0} (x-x {y})) ⟩
+  (z - x) + (y - y) ∼⟨ ≡⇒≤ {z - x}{ - x + z} (+-comm z (- x))
+  +-mono (≡⇒≤ {(y - y)}{(y - y)} refl)   ⟩
+  - x + z + (y - y) ∼⟨ ≡⇒≤ (+-assoc (- x) z (y - y) )   ⟩
+  - x + (z + (y - y)) ∼⟨ ≡⇒≤ { - x}{ - x} refl
+  +-mono ≡⇒≤ {z + (y - y)}{z + y - y}
+  (ℚsym {z + y - y}{z + (y - y)} (+-assoc z y (- y)) )   ⟩
+  - x + (z + y - y) ∼⟨ ≡⇒≤ { - x}{ - x} refl +-mono
+  (≡⇒≤ {z + y}{y + z} (+-comm z y )
+  +-mono ≡⇒≤ { - y}{ - y} refl)   ⟩
+  - x + (y + z - y) ∼⟨ ≡⇒≤ { - x}{ - x} refl
+  +-mono ≡⇒≤ {y + z - y}{y + (z - y)} (+-assoc y z (- y) )   ⟩
+  - x + (y + (z - y)) ∼⟨ ≡⇒≤ { - x + (y + (z - y))}{ - x + y + (z - y)}
+  (ℚsym { - x + y + (z - y)}{ - x + (y + (z - y))}
+  (+-assoc (- x) y (z - y) ))   ⟩
+  - x + y + (z - y) ∼⟨ ≡⇒≤ { - x + y}{y - x}
+  (+-comm (- x) y) +-mono ≡⇒≤ {z - y}{z - y} refl  ⟩
+  (y - x) + (z - y) ∼⟨  ≡⇒≤ {y - x}{∣ x - y ∣}(ℚsym {∣ x - y ∣}{y - x}
+  (ℚ≤-abs₁ {x}{y} p)) +-mono ≡⇒≤ {z - y}{∣ y - z ∣}
+  (ℚsym {∣ y - z ∣}{z - y} (ℚ≤-abs₁ {y}{z} p₁))   ⟩
+  ∣ x - y ∣ + ∣ y - z ∣ ∎
+     where
+     open IsEquivalence ℚ.isEquivalence using ()
+       renaming (sym to ℚsym; trans to ℚtrans)
+     open DecTotalOrder ℚ.decTotalOrder using (preorder)
+       renaming (reflexive to ≡⇒≤)
+     open Pre preorder
+triang x y z | yes p | yes p₁ | no ¬p = ⊥-elim (¬p (≤trans p p₁))
+  where
+  open DecTotalOrder ℚ.decTotalOrder using ()
+      renaming (trans to ≤trans)
+triang x y z | yes p | no ¬p | yes p₁ = begin 
+  ∣ x - z ∣   ∼⟨ ≡⇒≤ (ℚ≤-abs₁ p₁)   ⟩
+  z - x ∼⟨ ≡⇒≤ (P.sym (proj₂ +-identity (z - x))) ⟩
+  (z - x) + ((+ 0) ÷suc 0) ∼⟨  ≡⇒≤ {(z - x)}{(z - x)} refl +-mono
+  ≡⇒≤ {(+ 0) ÷suc 0}{(z - z)}(ℚsym {z - z}{(+ 0) ÷suc 0} (x-x {z})) ⟩
+  z - x + (z - z) ∼⟨ ((<⇒≤ (≰⇒> ¬p)) +-mono ≡⇒≤ { - x}{ - x} refl)
+  +-mono ((<⇒≤ (≰⇒> ¬p)) +-mono ≡⇒≤ { - z}{ - z} refl) ⟩
+  (y - x) + (y - z) ∼⟨  ≡⇒≤ {y - x}{∣ x - y ∣}(ℚsym {∣ x - y ∣}{y - x}
+  (ℚ≤-abs₁ {x}{y} p)) +-mono ≡⇒≤ {y - z}{∣ y - z ∣}
+  (ℚsym {∣ y - z ∣}{y - z} (ℚ≤-abs₂ (<⇒≤ (≰⇒> ¬p))))⟩
+  ∣ x - y ∣ + ∣ y - z ∣ ∎ 
+     where
+     open IsEquivalence ℚ.isEquivalence using ()
+       renaming (sym to ℚsym; trans to ℚtrans)
+     open DecTotalOrder ℚ.decTotalOrder using (preorder)
+       renaming (reflexive to ≡⇒≤)
+     open Pre preorder
+triang x y z | yes p | no ¬p | no ¬p₁ = begin
+  ∣ x - z ∣   ∼⟨ ≡⇒≤ (ℚ≤-abs₂ (<⇒≤ (≰⇒> ¬p₁))) ⟩
+  (x - z) ∼⟨   ≡⇒≤ (P.sym (proj₁ +-identity (x - z)))  ⟩
+  (+ 0) ÷suc 0 + (x - z) ∼⟨  ≡⇒≤ {(+ 0) ÷suc 0}{x - x}
+  (ℚsym {x - x}{(+ 0) ÷suc 0} (x-x {x})) +-mono ≡⇒≤ {x - z}{x - z} refl ⟩
+  (x - x) + (x - z) ∼⟨  (p  +-mono ≡⇒≤ { - x}{ - x} refl ) +-mono
+  (p +-mono ≡⇒≤ { - z}{ - z} refl) ⟩
+  (y - x) + (y - z) ∼⟨  ≡⇒≤ {y - x}{∣ x - y ∣}(ℚsym {∣ x - y ∣}{y - x}
+  (ℚ≤-abs₁ p)) +-mono ≡⇒≤ {y - z}{∣ y - z ∣} (ℚsym {∣ y - z ∣}{y - z}
+  (ℚ≤-abs₂ (<⇒≤ (≰⇒> ¬p))))⟩ 
+  ∣ x - y ∣ + ∣ y - z ∣ ∎ 
+     where
+     open IsEquivalence ℚ.isEquivalence using ()
+       renaming (sym to ℚsym; trans to ℚtrans)
+     open DecTotalOrder ℚ.decTotalOrder using (preorder)
+       renaming (reflexive to ≡⇒≤)
+     open Pre preorder
+triang x y z | no ¬p | yes p | yes p₁ = begin
+  ∣ x - z ∣                 ∼⟨ ≡⇒≤ (ℚ≤-abs₁ p₁)   ⟩
+  z - x                    ∼⟨ ≡⇒≤ (P.sym (proj₂ +-identity (z - x))) ⟩
+  (z - x) + ((+ 0) ÷suc 0) ∼⟨  ≡⇒≤ {(z - x)}{(z - x)} refl
+  +-mono ≡⇒≤ {(+ 0) ÷suc 0}{(y - y)}(ℚsym {y - y}{(+ 0)÷suc 0}(x-x {y}))⟩
+  z - x + (y - y)          ∼⟨ ≡⇒≤ (+-assoc z (- x) (y - y)) ⟩
+  z + (- x + (y - y))      ∼⟨ ≡⇒≤ {z}{z} refl +-mono
+  ≡⇒≤ { - x + (y - y)}{ - x + y - y}
+  (ℚsym { - x + y - y}{ - x + (y - y)} (+-assoc (- x) y (- y))) ⟩
+  z + (- x + y - y)        ∼⟨ ≡⇒≤ {z}{z} refl +-mono
+  ((≡⇒≤ { - x}{ - x} refl  +-mono  (<⇒≤ (≰⇒> ¬p)))
+  +-mono (≡⇒≤ { - y}{ - y} refl)) ⟩
+  z + (- x + x - y)        ∼⟨ ≡⇒≤ {z}{z} refl +-mono
+  (≡⇒≤ { - x + x}{(+ 0)÷suc 0} (ℚtrans { - x + x}{x - x}{(+ 0)÷suc 0}
+  (+-comm (- x) x) (x-x {x})) +-mono ≡⇒≤ { - y}{ - y} refl) ⟩
+  z + ((+ 0)÷suc 0 - y) ∼⟨ ≡⇒≤ {z}{z} refl +-mono
+  ≡⇒≤ {((+ 0)÷suc 0 - y)}{ - y} (proj₁ +-identity (- y)) ⟩
+  z - y ∼⟨ ≡⇒≤  (ℚsym {(+ 0) ÷suc 0 + (z - y)}{z - y}(proj₁ +-identity (z - y))) ⟩
+  ((+ 0) ÷suc 0) + (z - y) ∼⟨ ≡⇒≤ {(+ 0) ÷suc 0}{(y - y)}
+  (ℚsym {y - y}{(+ 0) ÷suc 0}(x-x {y})) +-mono ≡⇒≤ {z - y}{z - y} refl ⟩
+  y - y + (z - y) ∼⟨ (<⇒≤ (≰⇒> ¬p) +-mono ≡⇒≤ { - y}{ - y} refl)
+  +-mono ≡⇒≤ {z - y}{z - y} refl ⟩
+  x - y + (z - y) ∼⟨ ≡⇒≤ {x - y}{∣ x - y ∣}(ℚsym {∣ x - y ∣}{x - y}
+  (ℚ≤-abs₂ (<⇒≤ (≰⇒> ¬p)))) +-mono ≡⇒≤ {z - y}{∣ y - z ∣}
+  (ℚsym {∣ y - z ∣}{z - y} (ℚ≤-abs₁ p)) ⟩
+  ∣ x - y ∣ + ∣ y - z ∣ ∎ 
+     where
+     open IsEquivalence ℚ.isEquivalence using ()
+       renaming (sym to ℚsym; trans to ℚtrans)
+     open DecTotalOrder ℚ.decTotalOrder using (preorder)
+       renaming (reflexive to ≡⇒≤)
+     open Pre preorder
+triang x y z | no ¬p | yes p | no ¬p₁ = begin
+  ∣ x - z ∣   ∼⟨ ≡⇒≤ (ℚ≤-abs₂ (<⇒≤ (≰⇒> ¬p₁)))   ⟩
+  x - z ∼⟨ ≡⇒≤ (ℚsym {x - z + (+ 0)÷suc 0}{x - z}(proj₂ +-identity (x - z))) ⟩
+  (x - z) + ((+ 0) ÷suc 0) ∼⟨  ≡⇒≤ {x - z}{x - z} refl
+  +-mono ≡⇒≤ {(+ 0) ÷suc 0}{(y - y)}(ℚsym {y - y}{(+ 0)÷suc 0}(x-x {y}))⟩
+  x - z + (y - y) ∼⟨ ≡⇒≤ (+-assoc x (- z) (y - y)) ⟩
+  x + (- z + (y - y)) ∼⟨ ≡⇒≤ {x}{x} refl +-mono
+  ≡⇒≤ { - z + (y - y)}{ - z + y - y}
+  (ℚsym { - z + y - y}{ - z + (y - y)} (+-assoc (- z) y (- y))) ⟩
+  x + (- z + y - y) ∼⟨ ≡⇒≤ {x}{x} refl +-mono ((≡⇒≤ { - z}{ - z} refl
+  +-mono p)  +-mono (≡⇒≤ { - y}{ - y} refl)) ⟩
+  x + (- z + z - y) ∼⟨ ≡⇒≤ {x}{x} refl +-mono
+  (≡⇒≤ { - z + z}{(+ 0)÷suc 0} (ℚtrans { - z + z}{z - z}{(+ 0)÷suc 0}
+  (+-comm (- z) z) (x-x {z})) +-mono ≡⇒≤ { - y}{ - y} refl) ⟩
+  x + ((+ 0) ÷suc 0 - y) ∼⟨ ≡⇒≤ {x}{x} refl +-mono
+  ≡⇒≤ {(+ 0)÷suc 0 - y}{ - y} (proj₁ +-identity (- y)) ⟩
+  x - y ∼⟨ ≡⇒≤ (ℚsym {x - y + (+ 0) ÷suc 0}{x - y} (proj₂ +-identity (x - y))) ⟩
+  x - y + (+ 0) ÷suc 0 ∼⟨ ≡⇒≤ {x - y}{x - y} refl +-mono
+  ≡⇒≤ {(+ 0) ÷suc 0}{y - y}(ℚsym {y - y}{(+ 0) ÷suc 0} (x-x {y})) ⟩
+  x - y + (y - y) ∼⟨ ≡⇒≤ {x - y}{x - y} refl +-mono
+  (p +-mono ≡⇒≤ { - y}{ - y} refl) ⟩
+  x - y + (z - y) ∼⟨ ≡⇒≤ {x - y}{∣ x - y ∣}(ℚsym {∣ x - y ∣}{x - y}
+  (ℚ≤-abs₂ (<⇒≤ (≰⇒> ¬p)))) +-mono ≡⇒≤ {z - y}{∣ y - z ∣}
+  (ℚsym {∣ y - z ∣}{z - y} (ℚ≤-abs₁ p)) ⟩
+  ∣ x - y ∣ + ∣ y - z ∣ ∎
+     where
+     open IsEquivalence ℚ.isEquivalence using ()
+       renaming (sym to ℚsym; trans to ℚtrans)
+     open DecTotalOrder ℚ.decTotalOrder using (preorder)
+       renaming (reflexive to ≡⇒≤)
+     open Pre preorder
+triang x y z | no ¬p | no ¬p₁ | yes p =
+  ⊥-elim (¬p (≤trans p (<⇒≤ (≰⇒> ¬p₁))))
+  where
+  open DecTotalOrder ℚ.decTotalOrder using ()
+      renaming (trans to ≤trans)
+triang x y z | no ¬p | no ¬p₁ | no ¬p₂ = begin 
+  ∣ x - z ∣             ∼⟨ ≡⇒≤ (ℚ≤-abs₂ (<⇒≤ (≰⇒> ¬p₂)))   ⟩
+  x - z                ∼⟨ ≡⇒≤ {x}{x + (+ 0)÷suc 0}
+  (ℚsym {x + (+ 0)÷suc 0}{x} (proj₂ +-identity x)) +-mono ≡⇒≤ { - z}{ - z} refl ⟩
+  x + (+ 0) ÷suc 0 - z ∼⟨ (≡⇒≤ {x}{x} refl  +-mono
+  ≡⇒≤ {(+ 0)÷suc 0}{y - y} (ℚsym {y - y}{(+ 0)÷suc 0} (x-x {y}))) +-mono
+  ≡⇒≤ { - z}{ - z} refl ⟩
+  x + (y - y) - z      ∼⟨ (≡⇒≤ {x}{x} refl  +-mono
+  ≡⇒≤ {y - y}{ - y + y} (+-comm y (- y))) +-mono ≡⇒≤ { - z}{ - z}refl ⟩
+  x + (- y + y) - z    ∼⟨ ≡⇒≤ {x + (- y + y)}{x - y + y}
+  (ℚsym {x - y + y}{x + (- y + y)}(+-assoc x (- y) y)) +-mono
+    ≡⇒≤ { - z}{ - z} refl ⟩
+  x - y + y - z        ∼⟨ ≡⇒≤ { x - y + y - z}{x - y + (y - z)}
+    (+-assoc (x - y) y (- z)) ⟩
+  x - y + (y - z)      ∼⟨ ≡⇒≤ {x - y}{∣ x - y ∣}(ℚsym {∣ x - y ∣}{x - y}
+    (ℚ≤-abs₂ (<⇒≤ (≰⇒> ¬p)))) +-mono
+    ≡⇒≤ {y - z}{∣ y - z ∣}(ℚsym {∣ y - z ∣}{y - z}(ℚ≤-abs₂ (<⇒≤ (≰⇒> ¬p₁))))⟩  
+  ∣ x - y ∣ + ∣ y - z ∣ ∎
+     where
+     open IsEquivalence ℚ.isEquivalence using ()
+       renaming (sym to ℚsym; trans to ℚtrans)
+     open DecTotalOrder ℚ.decTotalOrder using (preorder)
+       renaming (reflexive to ≡⇒≤)
+     open Pre preorder
+\end{code}
+\subsection{Data/Real.agda}
+\begin{code}
+module Data.Real where
+
+open import Data.Sum
+open import Data.Rational as ℚ using (ℚ; -_ ; _*_; _÷suc_; 
+  _-_; _+_; ∣_∣;  decTotalOrder; _≤_; *≤* ; _≤?_; _÷_; ≡⇒≃)
+open import Data.Rational.Properties using (ℚabs₂; 
+  +-red₂; triang; ℚ≤lem; _⁻¹; ℚ≤-abs₁; ℚ≤-abs₂)
+  renaming (-swap to ℚ-swap; _+-mono_ to _ℚ+-mono_)
+open import Data.Integer as ℤ using (ℤ; +_ ; -[1+_])
+open import Data.Nat as ℕ using (ℕ; suc; zero; _≤?_)
+open import Data.Nat.Properties.Simple using (+-right-identity)
+open import Relation.Binary.Core using (Rel; IsEquivalence)
+import Level
+open import Relation.Nullary.Core
+open import Relation.Binary using (module DecTotalOrder)
+open import Relation.Binary.PropositionalEquality as P using 
+  (_≡_; refl; subst; cong; cong₂)
+open import Data.Product
+import Relation.Binary.PreorderReasoning as Pre
+
+--Constructible Real numbers as described by Bishop
+--A real number is defined to be a sequence along 
+--with a proof that the sequence is regular
+record ℝ : Set where
+  constructor Real
+  field
+    f : ℕ -> ℚ
+    reg : {n m : ℕ} -> ∣ f n - f m ∣ ≤ (suc n)⁻¹ + (suc m)⁻¹
+
+------------------------------------------------------------------------
+-- Equality of real numbers.
+infix 4 _≃_
+
+_≃_ : Rel ℝ Level.zero
+x ≃ y =  {n : ℕ} -> ∣ ℝ.f x n - ℝ.f y n ∣ ≤ (suc n)⁻¹ + (suc n)⁻¹
+
+-- Proof that this is an equivalence relation-------------------
+
+--This lemma ((2.3) in Constructive Analysis) gives us a
+--useful way to show equality
+postulate Bishopslem : {x y : ℝ} -> 
+           ({j : ℕ} -> ∃ λ Nⱼ -> ({m : ℕ} -> 
+           ∣ ℝ.f x (Nⱼ ℕ.+ m) - ℝ.f y (Nⱼ ℕ.+ m) ∣ ≤ (suc j)⁻¹)) 
+           -> (x ≃ y)
+
+isEquivalence : IsEquivalence _≃_
+isEquivalence = record {
+  refl = λ {x} -> refl≃ {x} ;
+  sym = λ {x}{y} -> sym≃ {x}{y};
+  trans = λ {a}{b}{c} -> trans≃ {a}{b}{c}
+  }
+  where
+
+  --reflexitivity
+  refl≃ : {x : ℝ} -> (x ≃ x)
+  refl≃ {x} = ℝ.reg x
+
+  --symmetry
+  sym≃ : {x y : ℝ} -> (x ≃ y -> y ≃ x)
+  sym≃ {x}{y} x≃y = λ {n} -> 
+    subst (λ a -> a ≤ (suc n)⁻¹ ℚ.+ (suc n)⁻¹) 
+    (ℚabs₂ (ℝ.f x n) (ℝ.f y n)) (x≃y {n})
+
+  --transitivity
+  trans≃ : {x y z : ℝ} -> (x ≃ y) -> (y ≃ z) -> (x ≃ z)
+  trans≃ {x}{y}{z} x≃y y≃z = Bishopslem {x}{z} (λ {j} -> 
+    Nⱼ {j} , λ {n} -> (begin 
+    ∣ ℝ.f x (Nⱼ {j} ℕ.+ n) - ℝ.f z (Nⱼ {j} ℕ.+ n) ∣ 
+      ∼⟨ triang (ℝ.f x (Nⱼ {j} ℕ.+ n)) (ℝ.f y (Nⱼ {j} ℕ.+ n)) (ℝ.f z (Nⱼ {j} ℕ.+ n)) ⟩
+    ∣ ℝ.f x (Nⱼ {j} ℕ.+ n) - ℝ.f y (Nⱼ {j} ℕ.+ n) ∣ + 
+    ∣ ℝ.f y (Nⱼ {j} ℕ.+ n) - ℝ.f z (Nⱼ {j} ℕ.+ n) ∣
+    ∼⟨ (x≃y {Nⱼ {j} ℕ.+ n}) ℚ+-mono (y≃z {Nⱼ {j} ℕ.+ n}) ⟩ 
+    ((suc (Nⱼ {j} ℕ.+ n))⁻¹ ℚ.+ (suc (Nⱼ {j} ℕ.+ n))⁻¹) ℚ.+ 
+    ((suc (Nⱼ {j} ℕ.+ n))⁻¹ ℚ.+ (suc (Nⱼ {j} ℕ.+ n))⁻¹)
+    ∼⟨ ((ℚ≤lem {Nⱼ {j}} {n}) ℚ+-mono (ℚ≤lem {Nⱼ {j}} {n})) 
+           ℚ+-mono 
+         ((ℚ≤lem {Nⱼ {j}} {n}) ℚ+-mono (ℚ≤lem {Nⱼ {j}} {n})) ⟩ 
+    ((suc (Nⱼ {j}))⁻¹ ℚ.+ (suc (Nⱼ {j}))⁻¹) ℚ.+ 
+    ((suc (Nⱼ {j}))⁻¹ ℚ.+ (suc (Nⱼ {j}))⁻¹) 
+    ∼⟨ ≈->≤ (+-red₂ j) ⟩ 
+    ((suc j)⁻¹ ∎) ))
+    where
+      open DecTotalOrder ℚ.decTotalOrder using () 
+        renaming (reflexive to ≈->≤; trans to ≤trans; isPreorder to ℚisPreorder)
+      open Pre record {isPreorder = ℚisPreorder}
+      Nⱼ = λ {j} -> suc ((suc (j ℕ.+ j) ℕ.+ (suc (j ℕ.+ j))))
+\end{code}
 \bibliography{citations}
 \bibliographystyle{kluwer}
 \end{document}
@@ -460,3 +2494,12 @@ p₁≤q₁ ℚ+-mono p₂≤q₂ = ?
 But the line between the two of these elements is blurred by the fact that agda is dependently typed, meaning that a set can take arguments of other sets or functions as input
 
 How these rules of syntax are to be defined , and in the  are many interesting philo sophical questions whic arises from such an endeavor.
+
+%problematiskt
+In the classical approach to mathematics, convergence of a sequence is defined as:
+\newtheorem{conv}{Definition}
+\begin{conv}Convergence of a sequence\\
+A sequence $x$ of rational numbers $x_1, x_2, x_3, \dots$ is \textbf{convergent} if for every rational $\epsilon > 0$, there exists an integer $N$ such that for all natural numbers $m, n > N$ we have $| x_m - x_n | < \epsilon$.
+\end{conv}
+Constructivists are not satisfied with this definition, because it does not entail instructions of \textit{how} the integer N is to be chosen. Claiming that something exists must for a constructivist also be followed by an explicit construction of the object.
+j
